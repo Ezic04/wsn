@@ -1,6 +1,19 @@
 # CMake build files  
 backend/build/  
 
+# Ignore .pyd files in lib 
+# lib/**/*.pyd  
+# lib/**/*.pyd  
+# lib/**/*.so  
+# lib/**/*.dll  
+# lib/**/*.pyi
+
+# Libs
+lib/
+
+# VScode files
+.vscode/
+
 # Python virtual environment  
 .venv/  
 
@@ -10,9 +23,11 @@ __pycache__/
 *.pyo  
 
 # Backend output files  
-lib/*.pyd  
-lib/*.so  
-lib/*.dll  
+*.pyd  
+*.so  
+*.dll  
+*.pyi
+
 
 # Frontend output files  
 bin/*.exe  

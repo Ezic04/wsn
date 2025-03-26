@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
-project(backend VERSION 0.1.0 LANGUAGES CXX)
+project(core_engine VERSION 0.1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 
@@ -30,4 +30,4 @@ message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 # message(STATUS "Python3_INCLUDE_DIR: ${Python3_INCLUDE_DIR}")
 # message(STATUS "Python3_LIBRARY: ${Python3_LIBRARY}")
 
-add_subdirectory(backend)
+add_subdirectory(core_engine)

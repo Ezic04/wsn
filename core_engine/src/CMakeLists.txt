@@ -1,6 +1,11 @@
 include_directories(${PYBIND_PATH})
 
-pybind11_add_module(core_engine bind.cpp main.cpp)
+set(core_engine_src
+    bind.cpp 
+    Sensor.cpp
+)
+
+pybind11_add_module(core_engine ${core_engine_src})
 
 set_target_properties(core_engine PROPERTIES OUTPUT_NAME "core_engine" SUFFIX ".pyd")
 

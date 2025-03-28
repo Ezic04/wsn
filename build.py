@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-import sysconfig
 from pathlib import Path
 
 # Define paths
@@ -13,9 +12,9 @@ requirements_path = project_root / "requirements.txt"
 
 lib_dir = project_root / "lib"
 
-core_dir = project_root / "core_engine"
-cmake_core_build_dir = core_dir / "build"
-core_package_dir = lib_dir / "core_engine"
+backend_dir = project_root / "backend_module"
+cmake_backend_build_dir = backend_dir / "build"
+backend_module_dir = lib_dir / "backend_module"
 
 user_interface_dir = project_root / "user_interface"
 
@@ -125,24 +124,24 @@ def install_requirements():
 
 # Configure CMake
 def configure_cmake():
-    if not cmake_core_build_dir.exists():
-        cmake_core_build_dir.mkdir()
+    if not cmake_backend_build_dir.exists():
+        cmake_backend_build_dir.mkdir()
     print("Configuring CMake...")
-    subprocess.run(["cmake", "-S", str(project_root), "-B", str(cmake_core_build_dir), "-DCMAKE_BUILD_TYPE=Release"], check=True)
+    subprocess.run(["cmake", "-S", str(project_root), "-B", str(cmake_backend_build_dir), "-DCMAKE_BUILD_TYPE=Release"], check=True)
 
 # Build project
 def build_project():
     print("Building project...")
-    subprocess.run(["cmake", "--build", str(cmake_core_build_dir), "--config", "Release", "--target", "install"], check=True)
+    subprocess.run(["cmake", "--build", str(cmake_backend_build_dir), "--config", "Release", "--target", "install"], check=True)
 
 # Initialize package
 def init_package():
-    if not core_package_dir.exists():
-        print("backend_package directory not found")
+    if not backend_module_dir.exists():
+        print("backend_module directory not found")
         sys.exit(-1)
 
     # Ensure __init__.py exists
-    init_file = core_package_dir / "__init__.py"
+    init_file = backend_module_dir / "__init__.py"
     if not init_file.exists():
         print("Creating __init__.py in backend_package...")
         init_file.touch()
@@ -150,7 +149,7 @@ def init_package():
         print("__init__.py already exists. Skipped.")
 
     # Add backend_package to sys.path
-    package_path = str(core_package_dir.resolve())
+    package_path = str(backend_module_dir.resolve())
     if package_path not in sys.path:
         sys.path.insert(0, package_path)
         print(f"Added {package_path} to sys.path")
@@ -178,11 +177,11 @@ def init_package():
 
 def generate_pyi():
     python_path = Path(".venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    module_name = "core_engine"
-    output_dir = core_package_dir
+    module_name = "backend_module"
+    output_dir = backend_module_dir
 
     #output_dir.mkdir(parents=True, exist_ok=True)
-    sys.path.append(str(core_package_dir))
+    sys.path.append(str(backend_module_dir))
     # print(sys.path)
 
     print(f"Generating .pyi file for {module_name}...")
@@ -190,7 +189,7 @@ def generate_pyi():
         str(python_path), "-m", "pybind11_stubgen",
         "--output", str(output_dir),
         module_name
-    ], check=True, cwd=str(core_package_dir))
+    ], check=True, cwd=str(backend_module_dir))
 
     print(f".pyi file should be in {output_dir}")
 

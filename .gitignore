@@ -1,5 +1,5 @@
 # CMake build files  
-core_engine/build/  
+backend_module/build/  
 
 # Ignore .pyd files in lib 
 # lib/**/*.pyd  

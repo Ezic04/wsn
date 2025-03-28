@@ -1,8 +1,9 @@
 #pragma once
 
-class SensorSystemManager
+class WSNManager
 {
-  void Initialization();
+  WSNManager();
+  ~WSNManager();
   void RunSimulation();
   void GetSimulationObj();
   void SaveSimulation();

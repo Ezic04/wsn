@@ -1,17 +1,19 @@
 include_directories(${PYBIND_PATH})
 
-set(core_engine_src
+set(backend_module_src
     bind.cpp 
+    WSNManager.cpp
+    Simulation.cpp
     Sensor.cpp
 )
 
-pybind11_add_module(core_engine ${core_engine_src})
+pybind11_add_module(backend_module ${backend_module_src})
 
-set_target_properties(core_engine PROPERTIES OUTPUT_NAME "core_engine" SUFFIX ".pyd")
+set_target_properties(backend_module PROPERTIES OUTPUT_NAME "backend_module" SUFFIX ".pyd")
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/lib/core_engine")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/lib/backend_module")
 
-install(TARGETS core_engine
+install(TARGETS backend_module
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}

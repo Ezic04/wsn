@@ -9,7 +9,7 @@
 
 class Simulation
 {
-  std::vector<Point> targets_;
+  std::vector<Target> targets_;
   std::vector<Sensor> sensors_;
 
 public:

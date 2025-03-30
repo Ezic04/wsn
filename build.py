@@ -133,6 +133,11 @@ def configure_cmake():
 def build_project():
     print("Building project...")
     subprocess.run(["cmake", "--build", str(cmake_backend_build_dir), "--config", "Release", "--target", "install"], check=True)
+        # Build the test executable
+    subprocess.run([
+        "cmake", "--build", str(cmake_backend_build_dir),
+        "--config", "Release", "--target", "cpp_test"
+    ], check=True)
 
 # Initialize package
 def init_package():

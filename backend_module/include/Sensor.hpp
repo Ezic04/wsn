@@ -3,47 +3,37 @@
 #include <cstdint>
 #include <ranges>
 #include <ostream>
+#include <utils.hpp>
 
-class Id
+class Entity
 {
-  inline static uint32_t Counter;
-  const uint32_t id_;
-
-public:
-  Id() : id_(Counter++) {}
-  static uint32_t GetCounter();
-  uint32_t GetId();
-};
-
-struct Point
-{
-  double x, y;
-  friend std::ostream &operator<<(std::ostream &os, const Point &p);
-};
-
-class Target : public Id
-{
+protected:
   Point position_;
 
 public:
-  Target(Point position);
+  explicit Entity(Point position) : position_(position) {}
+  Point GetPosition() const { return position_; }
 };
 
-class Sensor : public Id
+class Target : public Entity, public Id<Target>
+{
+public:
+  explicit Target(Point position) : Entity(position), Id<Target>() {}
+  Target(const Target &other) = default;
+};
+
+class Sensor : public Entity, public Id<Sensor>
 {
   inline static double Radius;
-  Point position_;
   uint16_t battery_lvl_;
-  std::vector<Target*> local_targets_;
+  std::vector<Target *> local_targets_;
   
-  public:
-  std::vector<Sensor*> local_sensors_;
-  Sensor(Point position);
-  Sensor(const Sensor &other);
-  Sensor &operator=(const Sensor &other);
-  static void SetRadius(double radius);
-  static double GetRadius();
-  Point GetPosition() const;
-  void AddLocalTarget(Target* target);
-  void AddLocalSensor(Sensor* sensor);
+public:
+  std::vector<Sensor *> local_sensors_;
+  explicit Sensor(Point position) : Entity(position), Id<Sensor>() {}
+  Sensor(const Sensor &other) = default;
+  static void SetRadius(double radius) { Radius = radius; }
+  static double GetRadius() { return Radius; }
+  void AddLocalTarget(Target &target) { local_targets_.push_back(&target); }
+  void AddLocalSensor(Sensor &sensor) { local_sensors_.push_back(&sensor); }
 };

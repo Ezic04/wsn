@@ -1,5 +1,23 @@
 #pragma once
 
+template <typename T>
+class Id
+{
+  inline static uint32_t Counter = 0;
+  uint32_t id_;
+
+public:
+  Id() : id_(Counter++) {}
+  static uint32_t GetCounter() { return Counter; }
+  uint32_t GetId() const { return id_; }
+};
+
+struct Point
+{
+  double x, y; 
+  friend std::ostream &operator<<(std::ostream &os, const Point &p);
+};
+
 template<typename T>
 T Sqr(T x)
 {

@@ -1,5 +1,7 @@
 # CMake build files  
-backend_module/build/  
+backend_module/build/
+backend_module/src/test.exe
+
 
 # Ignore .pyd files in lib 
 # lib/**/*.pyd  

@@ -1,13 +1,14 @@
 include_directories(${PYBIND_PATH})
 
-set(backend_module_src
-    bind.cpp 
+
+
+set(backend_module_src 
     WSNManager.cpp
     Simulation.cpp
     Sensor.cpp
 )
 
-pybind11_add_module(backend_module ${backend_module_src})
+pybind11_add_module(backend_module bind.cpp ${backend_module_src})
 
 set_target_properties(backend_module PROPERTIES OUTPUT_NAME "backend_module" SUFFIX ".pyd")
 
@@ -19,6 +20,7 @@ install(TARGETS backend_module
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
+add_executable(cpp_test test.cpp ${backend_module_src})
 
 #set(BACKEND_SRC main.cpp)
 #add_library(backend SHARED ${BACKEND_SRC})

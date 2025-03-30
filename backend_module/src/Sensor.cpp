@@ -10,6 +10,15 @@ uint32_t Id::GetId()
   return id_;
 }
 
+std::ostream& operator<<(std::ostream& os, const Point& p)
+{
+  return os << "(" << p.x << "," << p.y << ")";
+}
+
+Target::Target(Point position) : position_(position)
+{
+}
+
 Sensor::Sensor(Point position) : position_(position)
 {
 }
@@ -46,4 +55,14 @@ double Sensor::GetRadius()
 Point Sensor::GetPosition() const
 {
   return position_;
+}
+
+void Sensor::AddLocalTarget(Target *target)
+{
+  local_targets_.emplace_back(target);
+}
+
+void Sensor::AddLocalSensor(Sensor *sensor)
+{
+  local_sensors_.emplace_back(sensor);
 }

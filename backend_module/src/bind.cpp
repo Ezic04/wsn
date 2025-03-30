@@ -18,5 +18,8 @@ PYBIND11_MODULE(backend_module, m)
         .def_static("SetRadious", &Sensor::SetRadius)
         .def("GetPosition", &Sensor::GetPosition);
 
-    // py::class_<Simulation>(m, "Simulation");
+    py::class_<Simulation>(m, "Simulation")
+        .def(py::init<>())
+        .def("Initialization", &Simulation::Initialization, 
+            py::arg("target_num"), py::arg("sensor_num"), py::arg("sensor_radious"));
 }

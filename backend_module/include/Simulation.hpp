@@ -4,13 +4,19 @@
 #include <stdexcept>
 #include <random>
 #include <algorithm>
-
+#include <iostream> //for debug
+#include <utils.hpp>
 
 class Simulation
 {
   std::vector<Point> targets_;
   std::vector<Sensor> sensors_;
-  void Initialization(uint16_t target_num, uint16_t sensor_num, float sensor_radious);
+
+public:
+  Simulation();
+  void Initialization(uint16_t target_num, uint16_t sensor_num, double sensor_radious);
+
+private:
   void SelectPositions(uint16_t target_num, uint16_t sensor_num);
   void SelectNeighborhoods();
 };

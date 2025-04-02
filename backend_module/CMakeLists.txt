@@ -16,5 +16,7 @@
 # include_directories(${Python3_INCLUDE_DIRS})
 # include_directories(${PYBIND_PATH})
 
-include_directories(include)
+set(include_dir_path ${CMAKE_CURRENT_LIST_DIR}/include)
+
+# include_directories(include)
 add_subdirectory(src)

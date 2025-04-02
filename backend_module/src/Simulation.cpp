@@ -12,21 +12,22 @@ void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double
   }
   SelectPositions(target_num, sensor_num);
   Sensor::SetRadius(sensor_radious);
+  SortByPositions();
   SelectNeighborhoods();
   // for (const auto &it : targets_)
   // {
-  //   std::cout << it.GetPosition() << '\n';
+  //   std::cout << it.GetId() << " " << it.GetPosition() << '\n';
   // }
   // std::cout << "-----------------\n";
-  for (const auto &it : sensors_)
-  {
-    std::cout << it.GetId() << " " << it.GetPosition() << ": ";
-    for (size_t j = 0; j < it.local_sensors_.size(); j++)
-    {
-      std::cout << it.local_sensors_[j]->GetId() << ", ";
-    }
-    std::cout << '\n';
-  }
+  // for (const auto &it : sensors_)
+  // {
+  //   std::cout << it.GetId() << " " << it.GetPosition() << ": ";
+  //   for (size_t j = 0; j < it.local_targets_.size(); j++)
+  //   {
+  //     std::cout << it.local_targets_[j]->GetId() << ", ";
+  //   }
+  //   std::cout << '\n';
+  // }
 }
 
 void Simulation::SelectPositions(uint16_t target_num, uint16_t sensor_num)
@@ -46,7 +47,7 @@ void Simulation::SelectPositions(uint16_t target_num, uint16_t sensor_num)
   }
 }
 
-void Simulation::SelectNeighborhoods()
+void Simulation::SortByPositions()
 {
   auto PointCompare = [](const Point &p1, const Point &p2) -> bool
   {
@@ -62,6 +63,11 @@ void Simulation::SelectNeighborhoods()
   };
   std::sort(targets_.begin(), targets_.end(), TargetCompare);
   std::sort(sensors_.begin(), sensors_.end(), SensorCompare); // should be in other method
+}
+
+void Simulation::SelectNeighborhoods()
+{
+  double R = Sensor::GetRadius();
   for (auto s = sensors_.begin(); s != sensors_.end(); ++s)
   {
     auto it = s+1;
@@ -71,15 +77,30 @@ void Simulation::SelectNeighborhoods()
     }
     Point s_pos = s->GetPosition();
     Point it_pos = it->GetPosition();
-    while ( it != sensors_.end() && it_pos.x < s_pos.x + Sensor::GetRadius())
+    while ( it != sensors_.end() && it_pos.x < s_pos.x + R)
     {
       it_pos =it->GetPosition();
-      if (Sqr(s_pos.x - it_pos.x) + Sqr(s_pos.y - it_pos.y) < Sqr(Sensor::GetRadius()))
+      if (Sqr(s_pos.x - it_pos.x) + Sqr(s_pos.y - it_pos.y) < Sqr(R))
       {
         s->AddLocalSensor(*it);
         it->AddLocalSensor(*s);
       }
       ++it;
+    }
+  }
+  for (auto t = targets_.begin(); t != targets_.end(); ++t)
+  {
+    auto s = sensors_.begin();
+    Point t_pos = t->GetPosition();
+    Point s_pos = s->GetPosition();
+    while( s != sensors_.end()  && s_pos.x < t_pos.x + R )
+    {
+      s_pos = s->GetPosition();
+      if (Sqr(s_pos.x - t_pos.x) + Sqr(s_pos.y - t_pos.y) < Sqr(R))
+      {
+        s->AddLocalTarget(*t);
+      }
+      ++s;
     }
   }
 }

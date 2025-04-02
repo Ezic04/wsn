@@ -1,9 +1,9 @@
 #pragma once
-#include <vector>
 #include <cstdint>
-#include <ranges>
 #include <ostream>
+#include <ranges>
 #include <utils.hpp>
+#include <vector>
 
 class Entity
 {
@@ -26,9 +26,9 @@ class Sensor : public Entity, public Id<Sensor>
 {
   inline static double Radius;
   uint16_t battery_lvl_;
-  std::vector<Target *> local_targets_;
   
-public:
+  public:
+  std::vector<Target *> local_targets_;
   std::vector<Sensor *> local_sensors_;
   explicit Sensor(Point position) : Entity(position), Id<Sensor>() {}
   Sensor(const Sensor &other) = default;

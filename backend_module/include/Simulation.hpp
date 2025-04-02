@@ -9,6 +9,7 @@
 
 class Simulation
 {
+public: // to remove
   std::vector<Target> targets_;
   std::vector<Sensor> sensors_;
 
@@ -18,5 +19,6 @@ public:
 
 private:
   void SelectPositions(uint16_t target_num, uint16_t sensor_num);
+  void SortByPositions();
   void SelectNeighborhoods();
 };

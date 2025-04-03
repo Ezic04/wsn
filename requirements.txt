@@ -1,7 +1,5 @@
+pillow==11.1.0
 pybind11==2.13.6
 pybind11-stubgen==2.5.3
-PyQt6==6.8.1
-PyQt6-Qt6==6.8.2
-PyQt6_sip==13.10.0
 
 # pip freeze > requirements.txt

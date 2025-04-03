@@ -17,7 +17,10 @@ PYBIND11_MODULE(backend_module, m)
     .def(py::init<>())
     .def(py::init<float, float>())
     .def_readwrite("x", &Point::x)
-    .def_readwrite("y", &Point::y);
+    .def_readwrite("y", &Point::y)
+    .def("__mul__", &Point::operator*)
+    .def("__imul__", &Point::operator*=);
+
 
     py::class_<Target>(m, "Target")
     .def(py::init<Point>())    
@@ -25,7 +28,7 @@ PYBIND11_MODULE(backend_module, m)
     
     py::class_<Sensor>(m, "Sensor")
     .def(py::init<Point>())
-    .def_property_readonly_static("radius", [](py::object /* cls */) { return Sensor::GetRadius(); })
+    .def_property_readonly_static("Radius", [](py::object /* cls */) { return Sensor::GetRadius(); })
     .def_property_readonly("position", &Sensor::GetPosition);
     
     py::bind_vector<std::vector<Target>>(m, "VectorTarget");

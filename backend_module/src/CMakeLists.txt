@@ -6,6 +6,7 @@ set(backend_module_src
     WSNManager.cpp
     Simulation.cpp
     Sensor.cpp
+    utils.cpp
 )
 
 pybind11_add_module(backend_module bind.cpp ${backend_module_src})

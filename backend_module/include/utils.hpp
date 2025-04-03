@@ -1,4 +1,5 @@
 #pragma once
+#include <ostream>
 
 template <typename T>
 class Id
@@ -15,6 +16,8 @@ public:
 struct Point
 {
   double x, y; 
+  Point operator*( double scale) const;
+  Point& operator*=( double scale);
   friend std::ostream &operator<<(std::ostream &os, const Point &p);
 };
 

@@ -1,58 +1,65 @@
-from Interface import Interface
-
 from lib.backend_module import backend_module as backend
-from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QPainter, QImage, QColor
-from PyQt6.QtWidgets import QApplication, QWidget, QGraphicsScene, QGraphicsView
-import sys
+from PIL import Image, ImageTk, ImageDraw
+import tkinter as tk
 
 
-class Interface(QWidget):
+class Interface(tk.Tk):
   def __init__(self):
-    super().__init__()
-    self.setWindowTitle("WSN simulation")
-    self.setGeometry(100, 100, 800, 600)
-    self.canvas_size = 500
+    tk.Tk.__init__(self)
+    self.title("WSN simulation")
+    self.geometry("800x600")
 
-    # Inicjalizacja symulacji
+    self.canvas_size = 500
+    self.canvas = tk.Canvas(self, width= self.canvas_size, height=self.canvas_size, bg="white")
+    self.canvas.pack(pady=20)
+
+    self.bg_image = Image.new("RGB", (self.canvas_size, self.canvas_size), "white")
+
     sim = backend.Simulation()
     sim.Initialization(10, 20, 0.1)
 
-    # Przygotowanie sceny
-    self.scene = QGraphicsScene(self)
-    self.view = QGraphicsView(self.scene, self)
-    self.view.setGeometry(20, 20, self.canvas_size, self.canvas_size)
-    
-    # Rysowanie sensorów
-    for sensor in sim.Sensors:
-      pos = sensor.position
-      pos.x *= self.canvas_size
-      pos.y *= self.canvas_size
-      self.DrawPoint(pos, backend.Sensor.radius * self.canvas_size, QColor(50, 50, 50, 128))  # Szare, półprzezroczyste koło
+    R=int(backend.Sensor.Radius*self.canvas_size)
+    sens_range_img = self.CreateCircleImg(R, (0x40,0x40,0x40,0x80))
+    sensor_img = self.CreateCircleImg(3, (0, 0, 0, 0xFF))
+    target_img = self.CreateCircleImg(3, (0xFF, 0, 0, 0xFF))
+
 
     for sensor in sim.Sensors:
-      pos = sensor.position
-      pos.x *= self.canvas_size
-      pos.y *= self.canvas_size
-      self.DrawPoint(pos, 3, QColor(0xFF, 0xFF, 0xFF, 0xFF)) 
-    
-    # Rysowanie celów (targets)
+      pos = self.PointToIntTuple(sensor.position * self.canvas_size)
+      self.PasteToBackground(sens_range_img, (pos[0]-R, pos[1]-R))
+
+    for sensor in sim.Sensors:
+      pos = self.PointToIntTuple(sensor.position * self.canvas_size)
+      self.PasteToBackground(sensor_img, (pos[0]-3, pos[1]-3))
+
     for target in sim.Targets:
-      pos = target.position
-      pos.x *= self.canvas_size
-      pos.y *= self.canvas_size
-      self.DrawPoint(pos, 3, QColor(0xFF, 0, 0, 0xFF))
+      pos = self.PointToIntTuple(target.position * self.canvas_size)
+      self.PasteToBackground(target_img, (pos[0]-3, pos[1]-3))
 
-  def DrawPoint(self, p, r, color):
-    """Rysuje koło na scenie QGraphics"""
-    ellipse = self.scene.addEllipse(QRectF(p.x - r, p.y - r, r * 2, r * 2), QColor(color))
-    ellipse.setBrush(color)
+    self.tk_image = ImageTk.PhotoImage(self.bg_image)
+    self.canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_image)
+
+  def PointToIntTuple(self, point: backend.Point ):
+    return (int(point.x), int(point.y))
+
+  def CreateCircleImg(self, r, color):
+    r2 = int(2*r) 
+    img = Image.new("RGBA", (r2, r2), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse((0, 0, r2, r2), fill=color)
+    return img
+
+  def PasteToBackground(self, img, pos):
+    self.bg_image.paste(img, pos, img)
+  
+  def DrawPoint(self, pos: backend.Point, r: float, color : str):
+    self.canvas.create_oval(pos.x - r, pos.y - r, pos.x + r, pos.y + r, fill=color)
     
+
   def run(self):
-    self.show()
+    self.mainloop()
+
 
 if __name__ == "__main__":
-  app = QApplication(sys.argv)
-  window = Interface()
-  window.run()
-  sys.exit(app.exec())
+  i = Interface()
+  i.run()

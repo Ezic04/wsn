@@ -2,6 +2,7 @@
 backend_module/build/
 backend_module/src/test.exe
 
+*.exe
 
 # Ignore .pyd files in lib 
 # lib/**/*.pyd  

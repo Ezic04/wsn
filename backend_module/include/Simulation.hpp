@@ -14,11 +14,11 @@ public: // to remove
   std::vector<Sensor> sensors_;
 
 public:
-  Simulation();
+  Simulation(){};
   void Initialization(uint16_t target_num, uint16_t sensor_num, double sensor_radious);
-
+  void RunSimulation();
 private:
-  void SelectPositions(uint16_t target_num, uint16_t sensor_num);
+  void SelectRandomPositions(uint16_t target_num, uint16_t sensor_num);
   void SortByPositions();
   void SelectNeighborhoods();
 };

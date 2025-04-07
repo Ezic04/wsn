@@ -1,5 +1,6 @@
 #pragma once
 #include <ostream>
+#include <cstdint>
 
 template <typename T>
 class Id

@@ -27,7 +27,7 @@ PYBIND11_MODULE(backend_module, m)
     .def_property_readonly("position", &Target::GetPosition);
     
     py::class_<Sensor>(m, "Sensor")
-    .def(py::init<Point>())
+    .def(py::init<Point, int16_t>())
     .def_property_readonly_static("Radius", [](py::object /* cls */) { return Sensor::GetRadius(); })
     .def_property_readonly("position", &Sensor::GetPosition);
     

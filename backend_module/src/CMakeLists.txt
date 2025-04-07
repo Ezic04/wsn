@@ -1,7 +1,5 @@
 include_directories(${PYBIND_PATH})
 
-
-
 set(backend_module_src 
     WSNManager.cpp
     Simulation.cpp

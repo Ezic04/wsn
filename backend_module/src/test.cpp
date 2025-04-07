@@ -2,7 +2,8 @@
 
 int main()
 {
-  Simulation s;
-  s.Initialization(10, 20, 0.2);
+  Simulation sim;
+  sim.Initialization(10, 20, 0.5);
+  sim.RunSimulation();
   return 0;
 }

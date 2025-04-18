@@ -18,8 +18,8 @@ void generate_random_coverage(int num_sensors, int num_targets, float coverage_d
   
   // Set up random generator
   std::random_device rd;
-  // std::mt19937 gen(rd());
-  std::mt19937 gen(0);
+  std::mt19937 gen(rd());
+  // std::mt19937 gen(0);
   std::bernoulli_distribution d(coverage_density);
   
   // Generate random coverage patterns
@@ -84,8 +84,7 @@ void run_benchmarks() {
 
 int main()
 {
-  benchmark_minimal_cover(1, 4, 3, 0.5);
- 
+benchmark_minimal_cover(1, 6, 4, 0.5);  
   // run_benchmarks();
 
   // sensor_cover_masks[0] = 0b11;

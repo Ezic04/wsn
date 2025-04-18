@@ -30,21 +30,31 @@ void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double
 
 void Simulation::RunSimulation()
 {
-  uint32_t sens_num = sensors_.size();
-  uint32_t counter;
-  while (counter != sens_num)
+  auto sens_num = sensors_.size();
+  auto targtet_num = targets_.size();
+  bool all_target_flag = true;
+  uint16_t counter = 0;
+  for (auto &s : sensors_)
   {
-    counter = 0;
+    s.Initialization();
+  }
+  while (all_target_flag)
+  {
     for (auto &s : sensors_)
     {
-      if (s.GetState() == Sensor::State::kDead)
-      {
-        ++counter;
-        continue;
-      }
-      s.Execute();
+      s.Update();
     }
+    for (auto& t : targets_)
+    {
+      if(!t.GetCheckFlag())
+      {
+        all_target_flag = false;
+      }
+      t.SetCheckFlag(false);
+    }
+    counter += (int)all_target_flag;
   }
+  std::cout << counter << '\n';
 }
 
 void Simulation::SelectRandomPositions(uint16_t target_num, uint16_t sensor_num)
@@ -53,12 +63,12 @@ void Simulation::SelectRandomPositions(uint16_t target_num, uint16_t sensor_num)
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dist(0.0, 1.0);
   sensors_.reserve(sensor_num);
-  for (size_t i = 0; i < sensor_num; i++)
+  targets_.reserve(target_num);
+  for (size_t i = 0; i < sensor_num; ++i)
   {
     sensors_.emplace_back(Point(dist(gen), dist(gen)), battery);
   }
-  targets_.reserve(target_num);
-  for (size_t i = 0; i < target_num; i++)
+  for (size_t i = 0; i < target_num; ++i)
   {
     targets_.emplace_back(Point(dist(gen), dist(gen)));
   }

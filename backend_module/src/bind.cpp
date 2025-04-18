@@ -27,7 +27,7 @@ PYBIND11_MODULE(backend_module, m)
     .def_property_readonly("position", &Target::GetPosition);
     
     py::class_<Sensor>(m, "Sensor")
-    .def(py::init<Point, int16_t>())
+    .def(py::init<Point, uint32_t>())
     .def_property_readonly_static("Radius", [](py::object /* cls */) { return Sensor::GetRadius(); })
     .def_property_readonly("position", &Sensor::GetPosition);
     
@@ -39,6 +39,7 @@ PYBIND11_MODULE(backend_module, m)
     .def("Initialization", &Simulation::Initialization, 
         py::arg("target_num"), py::arg("sensor_num"), py::arg("sensor_radious"))
         .def_readonly("Targets", &Simulation::targets_)
-        .def_readonly("Sensors", &Simulation::sensors_);
+        .def_readonly("Sensors", &Simulation::sensors_)
+        .def("RunSimulation", &Simulation::RunSimulation);
 
-}
+};

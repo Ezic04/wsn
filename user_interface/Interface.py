@@ -15,7 +15,7 @@ class Interface(tk.Tk):
     self.sim = backend.Simulation()
     self.sim.Initialization(100, 200, 0.05)
 
-    rs = 2
+    rs = 1
     rt = 3 
     R = int(backend.Sensor.Radius*self.canvas_size)
     img_size = self.canvas_size//4
@@ -50,6 +50,8 @@ class Interface(tk.Tk):
 
     self.tk_image = ImageTk.PhotoImage(bg_img)
     self.canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_image)
+
+    self.sim.RunSimulation()
 
 
   def DrawFromList(self, list, img: Image, r: int, bg_img) -> None:

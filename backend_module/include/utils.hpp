@@ -5,25 +5,44 @@
 template <typename T>
 class Id
 {
-  inline static uint32_t Counter = 0;
-  uint32_t id_;
+public:
+using id_t = uint32_t;
+private:
+  inline static id_t Counter = 0;
+  id_t id_;
+
+protected:
+  Id() : id_(Counter++) {}
 
 public:
-  Id() : id_(Counter++) {}
-  static uint32_t GetCounter() { return Counter; }
+  static uint32_t GetIdCounter() { return Counter; }
   uint32_t GetId() const { return id_; }
+  // bool operator==(const Id<T> &other) { return id_ == other.GetId(); }
+  bool operator<(const Id<T> &other) { return id_ < other.GetId(); }
 };
+
+// namespace std
+// {
+//   template <typename T>
+//   struct hash<Id<T>>
+//   {
+//     std::size_t operator()(const Id<T> &id) const
+//     {
+//       return std::hash<typename Id<T>::id_t>{}(id.GetId());
+//     }
+//   };
+// }
 
 struct Point
 {
-  double x, y; 
-  Point operator*( double scale) const;
-  Point& operator*=( double scale);
+  double x, y;
+  Point operator*(double scale) const;
+  Point &operator*=(double scale);
   friend std::ostream &operator<<(std::ostream &os, const Point &p);
 };
 
-template<typename T>
+template <typename T>
 T Sqr(T x)
 {
-  return x*x;
+  return x * x;
 }

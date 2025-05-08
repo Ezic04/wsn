@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <iostream>
 #include <vector>
 #include <array>
 #include <bitset>
@@ -44,8 +45,8 @@ auto minimal_covers_aux = [](auto self, test_bit_vec candidate) -> bool
   while (rem)
   {
     int i = std::countr_zero(rem);
-    rem &= (rem - 1);
-    test_bit_vec new_candidate = candidate & ~(1ULL << i);
+    rem &= rem - 1;
+    bit_vec new_candidate = candidate & ~(1 << i);
     if (self(self, new_candidate))
     {
       is_minimal = false;
@@ -53,8 +54,7 @@ auto minimal_covers_aux = [](auto self, test_bit_vec candidate) -> bool
   }
   if (!is_minimal)
   {
-    lookup_table[candidate] = false;
-    return true;
+    return lookup_table[candidate] = true;
   }
   covers.emplace_back(candidate);
   return lookup_table[candidate] = true;

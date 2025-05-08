@@ -1,5 +1,8 @@
 #include <Simulation.hpp>
 
+// #define DEBUG
+#define RD 0
+
 constexpr int battery = 32;
 
 void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double sensor_radious)
@@ -8,24 +11,19 @@ void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double
   {
     throw std::invalid_argument("sensor_radious must be a small number between 0 and 1");
   }
+  #ifdef DEBUG
   Sensor::SetRadius(sensor_radious);
-  SelectRandomPositions(target_num, sensor_num);
+  targets_.emplace_back(Point(0.4, 0.4));
+  targets_.emplace_back(Point(0.6, 0.6));
+  sensors_.emplace_back(Point(0.3, 0.3), battery);
+  sensors_.emplace_back(Point(0.5, 0.5), battery);
+  sensors_.emplace_back(Point(0.7, 0.7), battery);
+  #else
+  Sensor::SetRadius(sensor_radious);
+  PlaceSensors(target_num, sensor_num);
+  #endif
   SortByPositions();
-  SelectNeighborhoods();
-  // for (const auto &it : targets_)
-  // {
-  //   std::cout << it.GetId() << " " << it.GetPosition() << '\n';
-  // }
-  // std::cout << "-----------------\n";
-  // for (const auto &it : sensors_)
-  // {
-  //   std::cout << it.GetId() << " " << it.GetPosition() << ": ";
-  //   for (size_t j = 0; j < it.local_targets_.size(); j++)
-  //   {
-  //     std::cout << it.local_targets_[j]->GetId() << ", ";
-  //   }
-  //   std::cout << '\n';
-  // }
+  DetermineNeighborhoods();
 }
 
 void Simulation::RunSimulation()
@@ -34,9 +32,9 @@ void Simulation::RunSimulation()
   auto targtet_num = targets_.size();
   bool all_target_flag = true;
   uint16_t counter = 0;
-  for (auto &s : sensors_)
+  for (auto &sensor : sensors_)
   {
-    s.Initialization();
+    sensor.Initialization();
   }
   while (all_target_flag)
   {
@@ -54,13 +52,17 @@ void Simulation::RunSimulation()
     }
     counter += (int)all_target_flag;
   }
-  std::cout << counter << '\n';
+  std::cout << "Network lifetime: " << counter << '\n';
 }
 
-void Simulation::SelectRandomPositions(uint16_t target_num, uint16_t sensor_num)
+void Simulation::PlaceSensors(uint16_t target_num, uint16_t sensor_num)
 {
   std::random_device rd;
+  #ifdef RD
+  std::mt19937 gen(RD);
+  #else
   std::mt19937 gen(rd());
+  #endif
   std::uniform_real_distribution<> dist(0.0, 1.0);
   sensors_.reserve(sensor_num);
   targets_.reserve(target_num);
@@ -92,7 +94,7 @@ void Simulation::SortByPositions()
   std::sort(sensors_.begin(), sensors_.end(), SensorCompare);
 }
 
-void Simulation::SelectNeighborhoods()
+void Simulation::DetermineNeighborhoods()
 {
   double R = Sensor::GetRadius();
   for (auto s = sensors_.begin(); s != sensors_.end(); ++s)

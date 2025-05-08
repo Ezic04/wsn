@@ -18,7 +18,7 @@ public:
   void Initialization(uint16_t target_num, uint16_t sensor_num, double sensor_radious);
   void RunSimulation();
 private:
-  void SelectRandomPositions(uint16_t target_num, uint16_t sensor_num);
+  void PlaceSensors(uint16_t target_num, uint16_t sensor_num);
   void SortByPositions();
-  void SelectNeighborhoods();
+  void DetermineNeighborhoods();
 };

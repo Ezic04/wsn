@@ -6,7 +6,8 @@ template <typename T>
 class Id
 {
 public:
-using id_t = uint32_t;
+  using id_t = uint32_t;
+
 private:
   inline static id_t Counter = 0;
   id_t id_;

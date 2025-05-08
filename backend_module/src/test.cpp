@@ -18,8 +18,8 @@ void generate_random_coverage(int num_sensors, int num_targets, float coverage_d
   
   // Set up random generator
   std::random_device rd;
-  // std::mt19937 gen(rd());
-  std::mt19937 gen(0);
+  std::mt19937 gen(rd());
+  // std::mt19937 gen(0);
   std::bernoulli_distribution d(coverage_density);
   
   // Generate random coverage patterns
@@ -84,10 +84,9 @@ void run_benchmarks() {
 
 int main()
 {
-  benchmark_minimal_cover(1, 4, 3, 0.5);
- 
+  // benchmark_minimal_cover(1, 4, 3, 0.5);
   // run_benchmarks();
-
+  
   // sensor_cover_masks[0] = 0b11;
   // sensor_cover_masks[1] = 0b10; 
   // sensor_cover_masks[2] = 0b01;
@@ -98,9 +97,9 @@ int main()
   //   std::cout << std::bitset<4>(c) << '\n';
   // }
 
-  // Simulation sim;
-  // sim.Initialization(10, 20, 0.5);
-  // sim.RunSimulation();
+  Simulation sim;
+  sim.Initialization(3, 5, 0.5);
+  sim.RunSimulation();
 
   return 0;
 }

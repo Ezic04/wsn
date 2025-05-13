@@ -6,13 +6,12 @@ sensor_cover_masks_(), cover_masks_(), covers_(), graph_()
 {
 }
 
-std::pair<CoverData, LDGraph> LDGraphGenerator::operator()()
+std::pair<std::vector<Cover>, LDGraph> LDGraphGenerator::operator()()
 {
   GenerateSensorCoverMasks();
   GenerateMinimalCoverMasks();
   GenerateCoverData();
   GenerateLDGraph();
-  InitializeCoverData();
   return std::pair(covers_, graph_);
 }
 
@@ -125,26 +124,5 @@ void LDGraphGenerator::GenerateLDGraph()
       graph_[i].emplace_back(j, weight);
       graph_[j].emplace_back(i, weight);
     }
-  }
-}
-
-void LDGraphGenerator::InitializeCoverData() // should be moved to main class
-{
-  for (size_t i = 0; i < cover_masks_.size(); ++i)
-  {
-    Adjacent& adj = graph_[i];
-    Cover& cover = covers_[i];
-    uint16_t degree = 0;
-    for (const auto& [_, weight] : adj)
-    {
-      degree += weight;
-    }
-    uint32_t min_id = std::numeric_limits<uint32_t>::max(); 
-    for (const Sensor* sensor : cover.sensors)
-    {
-      min_id = std::min(min_id, sensor->GetId());
-    }
-    cover.degree = degree;
-    cover.min_id = min_id;
   }
 }

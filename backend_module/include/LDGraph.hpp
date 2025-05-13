@@ -30,7 +30,7 @@ struct Cover
   }
 };
 
-using CoverData = std::vector<Cover>; // data about covers with given Id 
+// using CoverData = std::vector<Cover>; // data about covers with given Id 
 
 using Edge = std::pair<uint32_t, uint16_t>; // (cover_idx, weight)
 

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <format>
 #include <ranges>
+#include <algorithm>
 
 #include <LDGraph.hpp>
 #include <utils.hpp>
@@ -48,7 +49,8 @@ private:
   std::vector<Target *> local_targets_;
   std::vector<Sensor *> local_sensors_;
   LDGraph local_graph_;
-  CoverData covers_;
+  std::vector<Cover> covers_;
+  Cover* current_cover_;
 
 public:
   Sensor(Point position, uint32_t battery_lvl) : Entity(position), Id<Sensor>(), battery_lvl_(battery_lvl), state_(State::kActive) {}
@@ -62,4 +64,7 @@ public:
   void AddLocalTarget(Target &target) { local_targets_.emplace_back(&target); }
   void AddLocalSensor(Sensor &sensor) { local_sensors_.emplace_back(&sensor); }
   void Update();
+private:
+  void UpdateCoverData();
+  void Reshuffle();
 };

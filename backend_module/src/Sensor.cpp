@@ -2,7 +2,7 @@
 #include <GenerateLDGraph.hpp>
 
 #include <iostream>
-void PrintCoversWithSensors(const CoverData &covers)
+void PrintCoversWithSensors(const std::vector<Cover> &covers)
 {
   std::cout << "-- Covers: --\n";
 
@@ -21,7 +21,11 @@ void PrintCoversWithSensors(const CoverData &covers)
       std::cout << sensor->GetId(); // Print sensor ID
       first = false;
     }
-    std::cout << "]; min_id " << cover.min_id << "; Deg " << cover.degree <<  '\n';
+    std::cout << "]\ndeg=" << cover.degree
+              << " lt=" << cover.lifetime
+              << " rem_on=" << cover.remaining_on
+              << " min_id=" << cover.min_id
+              << " flag=" << (cover.feasible ? "True" : "False") << '\n';
   }
 }
 void PrintLDGraph(const LDGraph &graph)
@@ -73,7 +77,9 @@ void Sensor::Initialization()
   std::vector<Sensor *> all_sensors = local_sensors_;
   all_sensors.emplace_back(this);
   std::tie(covers_, local_graph_) = LDGraphGenerator{all_sensors, local_targets_}();
+  UpdateCoverData();
 
+  // printing
   std::cout << "=== Sensor Id: " << GetId() << " ===";
   std::cout << "\nT: ";
   for (auto &i : local_targets_)
@@ -104,5 +110,70 @@ void Sensor::Update()
   if (battery_lvl_ == 0)
   {
     state_ = State::kDischarged;
+  }
+}
+
+void Sensor::UpdateCoverData()
+{
+  for (size_t i = 0; i < covers_.size(); ++i)
+  {
+    Adjacent &adj = local_graph_[i];
+    Cover &cover = covers_[i];
+    cover.degree = 0;
+    for (const auto &[_, weight] : adj)
+    {
+      cover.degree += weight;
+    }
+    cover.lifetime = std::numeric_limits<uint16_t>::max();
+    cover.remaining_on = 0;
+    cover.min_id = std::numeric_limits<uint32_t>::max();
+    for (const Sensor *sensor : cover.sensors)
+    {
+      cover.lifetime = std::min(cover.lifetime, sensor->battery_lvl_);
+      cover.min_id = std::min(cover.min_id, sensor->GetId());
+      switch (sensor->GetState())
+      {
+      case State::kActive:
+        ++cover.remaining_on;
+        break;
+      case State::kDischarged:
+        cover.feasible = false;
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  // std::ranges::sort(covers_ /*,[](const Cover& a, const Cover& b) { return a < b; }*/ );
+  std::sort(covers_.begin(), covers_.end());
+}
+
+void Sensor::Reshuffle()
+{
+  enum class ReshuffleState
+  {
+    kOn,
+    kOff,
+    kNextCover
+  };
+
+  auto evaluate_cover = [](Cover &cover) -> ReshuffleState 
+  {
+    for (auto* sensor : cover.sensors)
+    {
+    }
+    
+  };
+
+  for (auto &cover : covers_)
+  {
+    ReshuffleState state = evaluate_cover(cover);
+    switch (state)
+    {
+    case ReshuffleState::kOn:
+      break;
+    default:
+      break;
+    }
   }
 }

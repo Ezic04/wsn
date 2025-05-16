@@ -42,8 +42,8 @@ def create_venv():
     else:
         print("Virtual environment already exists. Skipping creation.")
 
+# Add package path to venv 
 def add_package_path_to_venv(package_path):
-    # chcecking the system
     if os.name == 'nt':  # Windows
         activate_path = os.path.join(venv_dir, 'Scripts', 'activate.bat')
         line_to_add = f'set PYTHONPATH=%PYTHONPATH%;{package_path}\n'
@@ -53,7 +53,7 @@ def add_package_path_to_venv(package_path):
     else:
         raise OSError("Unsupported operating system.")
 
-    # adding path to pliku activate
+    # adding path to activate file
     with open(activate_path, 'a') as file:
         file.write(line_to_add)
 
@@ -78,19 +78,6 @@ def activate_venv():
             print("Virtual environment not found.")
             sys.exit(-1)
 
-# def activate_venv():
-#     if "VIRTUAL_ENV" not in os.environ:
-#         activate_script = venv_dir / ("Scripts/activate" if os.name == "nt" else "bin/activate")
-#         print(f"activate_script: {activate_script}")  # Debug print
-#         if activate_script.exists():
-#             print("Activating virtual environment...")
-#             os.environ["VIRTUAL_ENV"] = str(venv_dir)
-#             os.environ["PATH"] = str(venv_dir / "Scripts") + os.pathsep + os.environ["PATH"]
-#             print(f"Virtual environment activated. PATH: {os.environ['PATH']}")
-#         else:
-#             print("Virtual environment not found.")
-#             sys.exit(-1)
-
 # Install requirements
 def install_requirements():
     subprocess.run([str(python_path), "-m", "pip", "install", "--upgrade", "pip"], check=True)
@@ -101,26 +88,6 @@ def install_requirements():
     else:
         print("requirements.txt not found.")
         sys.exit(-1)
-
-
-# def add_custom_libs(packages_dir: Path):
-#     """Create a .pth file in site-packages to permanently add packages_dir to sys.path."""
-    
-#     site_packages = venv_dir
-
-#     # if sys.platform == "win32":
-#     #     site_packages = venv_dir / "Lib" / "site-packages"
-#     # else:
-#     #     site_packages = venv_dir / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
-    
-#     # Define the .pth file path
-#     pth_file = site_packages / "packages_dir.pth"
-    
-#     # Write the absolute path of package_dir to the .pth file
-#     with pth_file.open("w") as f:
-#         f.write(str(packages_dir.resolve()) + "\n")
-
-#     print(f"Created {pth_file} pointing to {packages_dir.resolve()}")
 
 # Configure CMake
 def configure_cmake():
@@ -160,34 +127,12 @@ def init_package():
         print(f"Added {package_path} to sys.path")
         
 
-# Copying .pyd file to frontend dir
-# def copy_pyd():
-#     release_dir = build_backend_dir/ "backend" / "src" / "Release"
-#     if not release_dir.exists():
-#         print("Release directory not found!")
-#         exit(-1)
-    
-#     # Finding .pyd file
-#     pyd_files = list(release_dir.glob("*.pyd"))
-#     if not pyd_files:
-#         print("No .pyd files found!")
-#         exit(-1)
-    
-#     # There is only one such file
-#     pyd_file = pyd_files[0]
-#     target_pyd = frontend_dir / pyd_file.name
-
-#     print(f"Copying {pyd_file} to {target_pyd}...")
-#     shutil.copy(pyd_file, target_pyd)
 
 def generate_pyi():
     python_path = Path(".venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     module_name = "backend_module"
     output_dir = backend_module_dir
-
-    #output_dir.mkdir(parents=True, exist_ok=True)
     sys.path.append(str(backend_module_dir))
-    # print(sys.path)
 
     print(f"Generating .pyi file for {module_name}...")
     subprocess.run([ 
@@ -198,20 +143,15 @@ def generate_pyi():
 
     print(f".pyi file should be in {output_dir}")
 
-
-
-# Main function
 def main():
     try:
         create_venv()
         add_package_path_to_venv(lib_dir)
         activate_venv()
         install_requirements()
-        # add_custom_libs(lib_dir)
         configure_cmake()
         build_project()
         init_package()
-        #copy_pyd()
         generate_pyi()
         print("Build completed successfully!")
     except subprocess.CalledProcessError as e:

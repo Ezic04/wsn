@@ -22,13 +22,13 @@ public:
 
 class Target : public Entity, public Id<Target>
 {
-  bool check_flag_;
+  bool covered_flag_;
 
 public:
-  explicit Target(Point position) : Entity(position), Id<Target>(), check_flag_(false) {}
+  explicit Target(Point position) : Entity(position), Id<Target>(), covered_flag_(false) {}
   Target(const Target &other) = default;
-  void SetCheckFlag(bool flag) { check_flag_ = flag; }
-  bool GetCheckFlag() const { return check_flag_; }
+  void SetCoverFlag(bool flag) { covered_flag_ = flag; }
+  bool GetCoverFlag() const { return covered_flag_; }
 };
 
 class Sensor : public Entity, public Id<Sensor>
@@ -36,9 +36,10 @@ class Sensor : public Entity, public Id<Sensor>
 public:
   enum class State
   {
-    kActive,
-    kInactive,
-    kDischarged
+    kOn,
+    kOff,
+    kDead,
+    kUndecided,
   };
 
 private:
@@ -50,10 +51,10 @@ private:
   std::vector<Sensor *> local_sensors_;
   LDGraph local_graph_;
   std::vector<Cover> covers_;
-  Cover* current_cover_;
+  size_t current_cover_index_;
 
 public:
-  Sensor(Point position, uint32_t battery_lvl) : Entity(position), Id<Sensor>(), battery_lvl_(battery_lvl), state_(State::kActive) {}
+  Sensor(Point position, uint32_t battery_lvl) : Entity(position), Id<Sensor>(), battery_lvl_(battery_lvl), state_(State::kUndecided) {}
   Sensor(const Sensor &other) = default;
   void Initialization();
   static void SetRadius(double radius) { Radius = radius; }
@@ -64,7 +65,8 @@ public:
   void AddLocalTarget(Target &target) { local_targets_.emplace_back(&target); }
   void AddLocalSensor(Sensor &sensor) { local_sensors_.emplace_back(&sensor); }
   void Update();
+  void BeginReshuffle();
+  bool Reshuffle();
 private:
   void UpdateCoverData();
-  void Reshuffle();
 };

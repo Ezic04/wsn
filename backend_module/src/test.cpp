@@ -98,7 +98,7 @@ int main()
   // }
 
   Simulation sim;
-  sim.Initialization(3, 5, 0.5);
+  sim.Initialization(20, 45, 0.3);
   sim.RunSimulation();
 
   return 0;

@@ -1,5 +1,6 @@
 from lib.backend_module import backend_module as backend
 from PIL import Image, ImageTk, ImageDraw
+from PIL.Image import Resampling
 import tkinter as tk
 
 class Interface(tk.Tk):
@@ -13,7 +14,7 @@ class Interface(tk.Tk):
     self.canvas.pack(pady=20)
 
     self.sim = backend.Simulation()
-    self.sim.Initialization(100, 200, 0.05)
+    self.sim.Initialization(20, 100, 0.1)
 
     rs = 1
     rt = 3 
@@ -54,7 +55,7 @@ class Interface(tk.Tk):
     self.sim.RunSimulation()
 
 
-  def DrawFromList(self, list, img: Image, r: int, bg_img) -> None:
+  def DrawFromList(self, list, img: Image.Image , r: int, bg_img) -> None:
     for it in list:
       pos = self.PointToIntTuple(it.position * self.canvas_size)
       self.PasteCircle(bg_img, img, pos, r)
@@ -62,12 +63,12 @@ class Interface(tk.Tk):
 
   def CreateCircleImg(self, size: int, r: int, 
                        color: tuple[int, int, int, int], 
-                       outline: tuple[int, int, int, int] = None ) -> Image:
+                       outline: tuple[int, int, int, int] | None = None ) -> Image.Image:
     img_up = Image.new("RGBA", (size+2, size+2), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img_up)
     draw.ellipse((1, 1, size+1, size+1), fill=color, outline=outline)
     r2 = 2*r+1
-    img = img_up.resize((r2,r2), Image.LANCZOS)
+    img = img_up.resize((r2,r2), Resampling.LANCZOS)
     return img
   
 
@@ -75,7 +76,7 @@ class Interface(tk.Tk):
     return (int(point.x), int(point.y))
 
 
-  def PasteCircle(self, bg_img: Image, img: Image, pos: tuple[int, int], r: int) -> None:
+  def PasteCircle(self, bg_img: Image.Image, img: Image.Image, pos: tuple[int, int], r: int) -> None:
     x, y = pos
     bg_img.paste(img, (x-r, y-r), img)
   

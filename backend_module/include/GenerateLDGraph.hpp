@@ -27,6 +27,7 @@ private:
   std::vector<Sensor *> MaskToSensors(bit_vec mask);
   void GenerateSensorCoverMasks();
   void GenerateMinimalCoverMasks();
-  void GenerateCoverData();
+  void InitializeCoverData();
   void GenerateLDGraph();
+  void GenetateCoverData();
 };

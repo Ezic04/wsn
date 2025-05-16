@@ -1,8 +1,7 @@
 #include "GenerateLDGraph.hpp"
 
-LDGraphGenerator::LDGraphGenerator(std::vector<Sensor *> &sensors, std::vector<Target *> &targets): 
-sensors_(sensors), targets_(targets), sensor_num_(sensors.size()), target_num_(targets.size()),
-sensor_cover_masks_(), cover_masks_(), covers_(), graph_()
+LDGraphGenerator::LDGraphGenerator(std::vector<Sensor *> &sensors, std::vector<Target *> &targets) : sensors_(sensors), targets_(targets), sensor_num_(sensors.size()), target_num_(targets.size()),
+                                                                                                     sensor_cover_masks_(), cover_masks_(), covers_(), graph_()
 {
 }
 
@@ -10,14 +9,15 @@ std::pair<std::vector<Cover>, LDGraph> LDGraphGenerator::operator()()
 {
   GenerateSensorCoverMasks();
   GenerateMinimalCoverMasks();
-  GenerateCoverData();
+  InitializeCoverData();
   GenerateLDGraph();
+  GenetateCoverData();
   return std::pair(covers_, graph_);
 }
 
-std::vector<Sensor*> LDGraphGenerator::MaskToSensors(bit_vec mask)
+std::vector<Sensor *> LDGraphGenerator::MaskToSensors(bit_vec mask)
 {
-  std::vector<Sensor*> result;
+  std::vector<Sensor *> result;
   bit_vec rem = mask;
   while (rem)
   {
@@ -63,7 +63,6 @@ void LDGraphGenerator::GenerateMinimalCoverMasks()
     return (~cover_mask & full_cover) == 0;
   };
 
-
   auto minimal_covers_aux = [&](auto self, bit_vec candidate) -> bool
   {
     if (lookup_table.contains(candidate))
@@ -96,7 +95,7 @@ void LDGraphGenerator::GenerateMinimalCoverMasks()
   minimal_covers_aux(minimal_covers_aux, full_sensor);
 }
 
-void LDGraphGenerator::GenerateCoverData()
+void LDGraphGenerator::InitializeCoverData()
 {
   for (bit_vec mask : cover_masks_)
   {
@@ -114,10 +113,13 @@ void LDGraphGenerator::GenerateLDGraph()
     for (size_t j = i + 1; j < covers_.size(); ++j)
     {
       bit_vec intersection_mask = cover_masks_[i] & cover_masks_[j];
-      if (intersection_mask == 0) { continue; }
+      if (intersection_mask == 0)
+      {
+        continue;
+      }
       uint16_t weight = std::numeric_limits<uint16_t>::max();
-      const std::vector<Sensor*> intersection = MaskToSensors(intersection_mask);
-      for (const Sensor* sensor : intersection)
+      const std::vector<Sensor *> intersection = MaskToSensors(intersection_mask);
+      for (const Sensor *sensor : intersection)
       {
         weight = std::min(weight, sensor->GetBateryLevel());
       }
@@ -125,4 +127,28 @@ void LDGraphGenerator::GenerateLDGraph()
       graph_[j].emplace_back(i, weight);
     }
   }
+}
+
+void LDGraphGenerator::GenetateCoverData()
+{
+  for (size_t i = 0; i < covers_.size(); ++i)
+  {
+    Adjacent &adj = graph_[i];
+    Cover &cover = covers_[i];
+    cover.degree = 0;
+    for (const auto &[_, weight] : adj)
+    {
+      cover.degree += weight; // could be done once
+    }
+    cover.lifetime = std::numeric_limits<uint16_t>::max();
+    cover.remaining_to_on = cover.sensors.size();
+    cover.min_id = std::numeric_limits<uint32_t>::max();
+    for (const Sensor *sensor : cover.sensors)
+    {
+      cover.lifetime = std::min(cover.lifetime, sensor->GetBateryLevel());
+      cover.min_id = std::min(cover.min_id, sensor->GetId()); // could be done once
+      cover.feasible = false;
+    }
+  }
+  std::sort(covers_.begin(), covers_.end());
 }

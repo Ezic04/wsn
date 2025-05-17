@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include "api/WSNManager.hpp"
+#include "api/SimulationManager.hpp"
 #include "core/Simulation.hpp"
 #include "core/Sensor.hpp"
 
@@ -36,7 +36,7 @@ PYBIND11_MODULE(backend_module, m)
     
     py::class_<Simulation>(m, "Simulation")
     .def(py::init<>())
-    .def("Initialization", &Simulation::Initialization, 
+    .def("Initialization", &Simulation::Initialize, 
         py::arg("target_num"), py::arg("sensor_num"), py::arg("sensor_radious"))
         .def_readonly("Targets", &Simulation::targets_)
         .def_readonly("Sensors", &Simulation::sensors_)

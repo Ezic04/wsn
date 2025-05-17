@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include "core/utils.hpp"
+#include "shared/utility.hpp"
 
 class Sensor;
 

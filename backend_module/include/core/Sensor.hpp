@@ -1,14 +1,13 @@
 #pragma once
 #include <ostream>
 #include <vector>
-#include <set>
 #include <stdexcept>
 #include <format>
 #include <ranges>
 #include <algorithm>
 
+#include "shared/utility.hpp"
 #include "core/LDGraph.hpp"
-#include "core/utils.hpp"
 
 class Entity
 {

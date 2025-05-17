@@ -1,8 +1,35 @@
-#include "core/Simulation.hpp"
-#include "core/minimal_cover.hpp"
 #include <chrono>
 #include <iostream>
 #include <random>
+#include "core/Simulation.hpp"
+#include "core/minimal_cover.hpp"
+#include "api/SimulationManager.hpp"
+
+int main()
+{
+  // benchmark_minimal_cover(1, 4, 3, 0.5);
+  // run_benchmarks();
+
+  // Simulation sim;
+  // sim.Initialize(20, 40, 0.2); // this is bug with RD 0
+  // // sim.Initialization(4, 8, 0.5);
+  // sim.RunSimulation();
+
+  SimulationManager m;
+  m.LoadParameters({.sensor_radious = 0.3, .initial_battery_lvl = 64, .reshuffle_interval = 8});
+  // m.LoadFromJSON("config.json");
+  m.LoadRandomScenario(8, 24);
+  m.Initialize();
+  SimulationState state;
+  do
+  {
+    m.Tick();
+    state = m.GetCurrentState();
+  } while (state.covered_target_count != 0);
+  std::cout << "Lifetime: " << state.tick;
+
+  return 0;
+}
 
 // Function to generate random sensor-target coverage scenarios
 void generate_random_coverage(int num_sensors, int num_targets, float coverage_density)
@@ -86,27 +113,4 @@ void run_benchmarks()
 
   // Test with different coverage densities
   benchmark_minimal_cover(10, 8, 4, 0.7);
-}
-
-int main()
-{
-  // benchmark_minimal_cover(1, 4, 3, 0.5);
-  // run_benchmarks();
-
-  // sensor_cover_masks[0] = 0b11;
-  // sensor_cover_masks[1] = 0b10;
-  // sensor_cover_masks[2] = 0b01;
-  // minimal_covers();
-  // // std::cout << covers.size() << '\n';
-  // for (auto &c : covers)
-  // {
-  //   std::cout << std::bitset<4>(c) << '\n';
-  // }
-
-  Simulation sim;
-  // sim.Initialization(20, 40, 0.2); // this is bug
-  sim.Initialization(4, 8, 0.5);
-  sim.RunSimulation();
-
-  return 0;
 }

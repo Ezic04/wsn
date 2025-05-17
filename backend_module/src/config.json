@@ -1,0 +1,16 @@
+{
+  "parameters": {
+    "sensor_radious": 0.5,
+    "initial_batery_lvl": 64,
+    "reshuffle_interval": 8
+  },
+  "scenario": {
+    "sensor_positions": [
+      { "x": 0.1, "y": 0.2 },
+      { "x": 0.5, "y": 0.6 }
+    ],
+    "target_positions": [
+      { "x": 0.3, "y": 0.4 }
+    ]
+  }
+}

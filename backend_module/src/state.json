@@ -1,0 +1,8 @@
+{
+  "tick": 42,
+  "covered_target_num": 10,
+  "coverage_percentage": 83.3,
+  "is_target_covered": [true, true, false, true],
+  "sensor_state": ["kOn", "kOff", "kDead"],
+  "sensor_battery_lvl": [90, 85, 0]
+}

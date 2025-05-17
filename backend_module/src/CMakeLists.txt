@@ -1,14 +1,17 @@
 include_directories(${PYBIND_PATH})
 
-set(backend_module_src 
-    WSNManager.cpp
-    Simulation.cpp
-    Sensor.cpp
-    utils.cpp
-    GenerateLDGraph.cpp
+set(core_src 
+    core/Simulation.cpp
+    core/Sensor.cpp
+    core/GenerateLDGraph.cpp
 )
 
-pybind11_add_module(backend_module bind.cpp ${backend_module_src})
+set(api_src 
+    api/bind.cpp
+    api/SimulationManager.cpp
+)
+
+pybind11_add_module(backend_module ${core_src} ${api_src})
 
 target_include_directories(backend_module PRIVATE ${include_dir_path})
 
@@ -22,6 +25,6 @@ install(TARGETS backend_module
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-add_executable(cpp_test test.cpp ${backend_module_src})
+add_executable(cpp_test test.cpp ${core_src})
 
 target_include_directories(cpp_test PRIVATE ${include_dir_path})

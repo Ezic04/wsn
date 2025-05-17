@@ -17,7 +17,30 @@ auto draw_battery = [](int max, int lvl) -> void
   std::cout << "[" << battery_str << "] " << static_cast<int>(percentage) << "%" << std::endl;
 };
 
-void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double sensor_radious)
+void Simulation::Initialize(const SimulationParameters &parameters, const SimulationScenario &scenario)
+{
+  if (!(0.0 < parameters.sensor_radious && parameters.sensor_radious < 1.0))
+  {
+    throw std::invalid_argument("sensor_radious must be a number between 0 and 1");
+  }
+  if ( parameters.initial_battery_lvl < parameters.reshuffle_interval)
+  {
+    throw std::invalid_argument("reshuffle interval bigger than initial battery level");
+  }
+  initial_batterry_lvl_ = parameters.initial_battery_lvl;
+  reshuffle_interval_ = parameters.reshuffle_interval;
+  Sensor::SetRadius(parameters.sensor_radious);
+  PlaceAtPositions(scenario.target_positions, scenario.sensor_positions);
+  SortByPositions();
+  DetermineNeighborhoods();
+  SortById();
+  for (auto &sensor : sensors_)
+  {
+    sensor.Initialization();
+  }
+}
+
+void Simulation::Initialize(uint16_t target_num, uint16_t sensor_num, double sensor_radious)
 {
   if (!(0.0 < sensor_radious && sensor_radious < 1.0))
   {
@@ -38,10 +61,29 @@ void Simulation::Initialization(uint16_t target_num, uint16_t sensor_num, double
   DetermineNeighborhoods();
 }
 
+SimulationState Simulation::GetSimulationState()
+{
+  SimulationState state;
+  auto &sensor_states = state.sensor_states;
+  auto &sensor_battery_lvls = state.sensor_battery_lvls;
+  sensor_states.reserve(sensor_num);
+  sensor_battery_lvls.reserve(sensor_num);
+  for (int i = 0; i < sensor_num; ++i)
+  {
+    sensor_states[i] = sensors_[i].GetState();
+    sensor_battery_lvls[i] = sensors_[i].GetBateryLevel();
+  }
+
+  state.tick = tick_;
+  state.is_target_covered = CountCover();
+  state.all_target_covered = all_target_covered_;
+  state.covered_target_count = covered_tragets_count_;
+  state.coverage_percentage = 100.f * covered_tragets_count_ / target_num;
+  return state;
+}
+
 void Simulation::RunSimulation()
 {
-  auto sens_num = sensors_.size();
-  auto targtet_num = targets_.size();
   for (auto &sensor : sensors_)
   {
     sensor.Initialization();
@@ -49,7 +91,7 @@ void Simulation::RunSimulation()
 
   do
   {
-    Update();
+    Tick();
   } while (covered_tragets_count_);
 
   std::cout << "Network lifetime: " << tick_ - 1 << '\n';
@@ -57,6 +99,22 @@ void Simulation::RunSimulation()
   for (auto &s : sensors_)
   {
     std::cout << "s" << s.GetId() << ": " << s.GetBateryLevel() << " " << state_to_string[s.GetState()] << '\n';
+  }
+}
+
+void Simulation::PlaceAtPositions(const std::vector<Point> &target_positions, const std::vector<Point> &sensor_positions)
+{
+  target_num = target_positions.size();
+  sensor_num = sensor_positions.size();
+  targets_.reserve(target_num);
+  sensors_.reserve(sensor_num);
+  for (int i = 0; i < target_num; ++i)
+  {
+    targets_.emplace_back(target_positions[i]);
+  }
+  for (int i = 0; i < sensor_num; ++i)
+  {
+    sensors_.emplace_back(sensor_positions[i], initial_batterry_lvl_);
   }
 }
 
@@ -73,7 +131,7 @@ void Simulation::PlaceSensors(uint16_t target_num, uint16_t sensor_num)
   targets_.reserve(target_num);
   for (size_t i = 0; i < sensor_num; ++i)
   {
-    sensors_.emplace_back(Point(dist(gen), dist(gen)), max_baterry_);
+    sensors_.emplace_back(Point(dist(gen), dist(gen)), initial_batterry_lvl_);
   }
   for (size_t i = 0; i < target_num; ++i)
   {
@@ -93,6 +151,12 @@ void Simulation::SortByPositions()
   };
   std::sort(targets_.begin(), targets_.end(), entity_compare);
   std::sort(sensors_.begin(), sensors_.end(), entity_compare);
+}
+
+void Simulation::SortById()
+{
+  std::sort(targets_.begin(), targets_.end());
+  std::sort(sensors_.begin(), sensors_.end());
 }
 
 void Simulation::DetermineNeighborhoods()
@@ -135,54 +199,59 @@ void Simulation::DetermineNeighborhoods()
   }
 }
 
-void Simulation::Update()
+void Simulation::Tick()
 {
+  ++tick_;
+  for (auto &target : targets_)
+  {
+    target.SetCoverFlag(false);
+  }
   bool reshuffle_active = tick_ % reshuffle_interval_ == 0;
   if (reshuffle_active)
   {
-    for (auto &s : sensors_)
+    for (auto &sensor : sensors_)
     {
-      s.BeginReshuffle();
+      sensor.BeginReshuffle();
     }
   }
   while (reshuffle_active)
   {
     reshuffle_active = false;
-    for (auto &s : sensors_)
+    for (auto &sensor : sensors_)
     {
-      if (!s.Reshuffle())
+      if (!sensor.Reshuffle())
       {
         reshuffle_active = true;
       }
     }
   }
-
-  for (auto &s : sensors_)
+  for (auto &sensor : sensors_)
   {
-    s.Update();
+    sensor.Update();
   }
-  CountCover();
+}
+
+std::vector<bool> Simulation::CountCover()
+{
+  std::vector<bool> is_target_covered(target_num);
+  covered_tragets_count_ = 0;
+  for (int i = 0; i < target_num; ++i)
+  {
+    auto &target = targets_[i];
+    is_target_covered[i] = target.GetCoverFlag();
+    if (is_target_covered[i])
+    {
+      ++covered_tragets_count_;
+    }
+    else if (tick_ == 0) // debug
+    {
+      std::cout << std::format("t{}: ({},{})\n", target.GetId(), target.GetPosition().x, target.GetPosition().y);
+    }
+  }
+  all_target_covered_ = covered_tragets_count_ == targets_.size();
   if (tick_ % reshuffle_interval_ == 0) // debug
   {
     draw_battery(targets_.size(), covered_tragets_count_);
   }
-  ++tick_;
-}
-
-void Simulation::CountCover()
-{
-  covered_tragets_count_ = 0;
-  for (auto &t : targets_)
-  {
-    if (t.GetCoverFlag())
-    {
-      ++covered_tragets_count_;
-    }
-    else if (tick_ == 0)
-    {
-      std::cout << std::format("t{}: ({},{})\n", t.GetId(), t.GetPosition().x, t.GetPosition().y);
-    }
-    t.SetCoverFlag(false);
-  }
-  all_target_covered_ = covered_tragets_count_ == targets_.size();
+  return is_target_covered;
 }

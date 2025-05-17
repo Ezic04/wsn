@@ -1,3 +1,4 @@
+#pragma once
 #include <unordered_map>
 #include <iostream>
 #include <vector>
@@ -12,8 +13,8 @@ std::vector<test_bit_vec> covers;
 int target_num;
 int sensor_num;
 
-test_bit_vec full_cover = (1ULL << target_num) - 1;
-test_bit_vec full_sensor = (1ULL << sensor_num) - 1;
+test_bit_vec full_cover = (1 << target_num) - 1;
+test_bit_vec full_sensor = (1 << sensor_num) - 1;
 
 std::array<test_bit_vec, test_bit_vec_size> sensor_cover_masks;
 std::unordered_map<test_bit_vec, bool> lookup_table;

@@ -1,6 +1,5 @@
-#include <Simulation.hpp>
-
-#include <minimal_cover.hpp>
+#include "core/Simulation.hpp"
+#include "core/minimal_cover.hpp"
 #include <chrono>
 #include <iostream>
 #include <random>
@@ -105,7 +104,8 @@ int main()
   // }
 
   Simulation sim;
-  sim.Initialization(20, 40, 0.2);
+  // sim.Initialization(20, 40, 0.2); // this is bug
+  sim.Initialization(4, 8, 0.5);
   sim.RunSimulation();
 
   return 0;

@@ -1,5 +1,5 @@
-#include "Sensor.hpp"
-#include <GenerateLDGraph.hpp>
+#include "core/Sensor.hpp"
+#include "core/GenerateLDGraph.hpp"
 
 #include <iostream>
 void PrintCoversWithSensors(const std::vector<Cover> &covers)

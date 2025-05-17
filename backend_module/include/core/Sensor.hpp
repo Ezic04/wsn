@@ -7,8 +7,8 @@
 #include <ranges>
 #include <algorithm>
 
-#include <LDGraph.hpp>
-#include <utils.hpp>
+#include "core/LDGraph.hpp"
+#include "core/utils.hpp"
 
 class Entity
 {

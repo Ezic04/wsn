@@ -1,4 +1,4 @@
-#include "GenerateLDGraph.hpp"
+#include "core/GenerateLDGraph.hpp"
 
 LDGraphGenerator::LDGraphGenerator(std::vector<Sensor *> &sensors, std::vector<Target *> &targets) : sensors_(sensors), targets_(targets), sensor_num_(sensors.size()), target_num_(targets.size()),
                                                                                                      sensor_cover_masks_(), cover_masks_(), covers_(), graph_()

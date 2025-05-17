@@ -25,7 +25,3 @@ install(TARGETS backend_module
 add_executable(cpp_test test.cpp ${backend_module_src})
 
 target_include_directories(cpp_test PRIVATE ${include_dir_path})
-
-#set(BACKEND_SRC main.cpp)
-#add_library(backend SHARED ${BACKEND_SRC})
-#target_link_libraries()

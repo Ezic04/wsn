@@ -5,8 +5,8 @@
 #include <map>
 #include <unordered_map>
 
-#include <LDGraph.hpp>
-#include <Sensor.hpp>
+#include "core/LDGraph.hpp"
+#include "core/Sensor.hpp"
 
 class LDGraphGenerator
 {

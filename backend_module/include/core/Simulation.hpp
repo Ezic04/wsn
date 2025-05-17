@@ -1,11 +1,11 @@
 #pragma once
-#include <Sensor.hpp>
+#include "core/Sensor.hpp"
 #include <vector>
 #include <stdexcept>
 #include <random>
 #include <algorithm>
 #include <iostream> //for debug
-#include <utils.hpp>
+#include "core/utils.hpp"
 
 class Simulation
 {

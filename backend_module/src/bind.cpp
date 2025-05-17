@@ -1,9 +1,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <WSNManager.hpp>
-#include <Simulation.hpp>
-#include <Sensor.hpp>
+#include "api/WSNManager.hpp"
+#include "core/Simulation.hpp"
+#include "core/Sensor.hpp"
 
 namespace py = pybind11;
 

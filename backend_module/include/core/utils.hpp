@@ -18,7 +18,6 @@ protected:
 public:
   static uint32_t GetIdCounter() { return Counter; }
   uint32_t GetId() const { return id_; }
-  // bool operator==(const Id<T> &other) { return id_ == other.GetId(); }
   bool operator<(const Id<T> &other) { return id_ < other.GetId(); }
 };
 

@@ -146,7 +146,6 @@ void Sensor::BeginReshuffle()
     return;
   }
   state_ = State::kUndecided;
-  current_cover_index_ = 0;
 }
 
 bool Sensor::Reshuffle()
@@ -157,6 +156,7 @@ bool Sensor::Reshuffle()
   }
   
   UpdateCoverData();
+  uint32_t current_cover_index_ = 0;
   while (!covers_[current_cover_index_].feasible)
   {
     ++current_cover_index_;
@@ -173,7 +173,6 @@ bool Sensor::Reshuffle()
     return true;
   }
 
-  // bool cover_satisfiable = true;
   bool cover_satisfied = true;
   for (auto *s : local_sensors_)
   {
@@ -183,12 +182,6 @@ bool Sensor::Reshuffle()
     }
     bool contains = current_cover_.Contains(s);
     State state = s->GetState();
-    // if (contains && state == State::kOff || !contains && state == State::kOn)
-    // {
-    //   cover_satisfiable = false;
-    //   cover_satisfied = false;
-    //   break;
-    // }
     if (contains && state != State::kOn)
     {
       cover_satisfied = false;

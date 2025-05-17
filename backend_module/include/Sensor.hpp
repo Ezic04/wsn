@@ -51,7 +51,6 @@ private:
   std::vector<Sensor *> local_sensors_;
   LDGraph local_graph_;
   std::vector<Cover> covers_;
-  size_t current_cover_index_;
 
 public:
   Sensor(Point position, uint32_t battery_lvl) : Entity(position), Id<Sensor>(), battery_lvl_(battery_lvl), state_(State::kUndecided) {}

@@ -22,17 +22,6 @@ public:
   bool operator<(const Id<T> &other) { return id_ < other.GetId(); }
 };
 
-// namespace std
-// {
-//   template <typename T>
-//   struct hash<Id<T>>
-//   {
-//     std::size_t operator()(const Id<T> &id) const
-//     {
-//       return std::hash<typename Id<T>::id_t>{}(id.GetId());
-//     }
-//   };
-// }
 
 struct Point
 {

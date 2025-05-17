@@ -2,7 +2,7 @@
 
 #include <map>
 // #define DEBUG
-// #define RD 0
+#define RD 0
 
 auto draw_battery = [](int max, int lvl) -> void
 {
@@ -85,7 +85,7 @@ void Simulation::SortByPositions()
 {
   auto point_compare = [](const Point &p1, const Point &p2) -> bool
   {
-    return std::fabs(p1.x - p2.x) < Sensor::GetRadius() ? p1.y < p2.y : p1.x < p2.x;
+    return std::fabs(p1.x - p2.x) < std::numeric_limits<double>::epsilon() ? p1.y < p2.y : p1.x < p2.x;
   };
   auto entity_compare = [&point_compare](const Entity &s1, const Entity &s2) -> bool
   {
@@ -162,11 +162,11 @@ void Simulation::Update()
     s.Update();
   }
   CountCover();
-  ++tick_;
   if (tick_ % reshuffle_interval_ == 0) // debug
   {
     draw_battery(targets_.size(), covered_tragets_count_);
   }
+  ++tick_;
 }
 
 void Simulation::CountCover()
@@ -177,6 +177,10 @@ void Simulation::CountCover()
     if (t.GetCoverFlag())
     {
       ++covered_tragets_count_;
+    }
+    else if (tick_ == 0)
+    {
+      std::cout << std::format("t{}: ({},{})\n", t.GetId(), t.GetPosition().x, t.GetPosition().y);
     }
     t.SetCoverFlag(false);
   }

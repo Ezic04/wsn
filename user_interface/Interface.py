@@ -14,7 +14,7 @@ class Interface(tk.Tk):
     self.canvas.pack(pady=20)
 
     self.sim = backend.Simulation()
-    self.sim.Initialization(20, 100, 0.1)
+    self.sim.Initialization(20, 40, 0.2)
 
     rs = 1
     rt = 3 

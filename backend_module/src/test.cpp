@@ -5,6 +5,8 @@
 #include "core/minimal_cover.hpp"
 #include "api/SimulationManager.hpp"
 
+using SimulationStopCondition = SimulationManager::StopCondition;
+
 int main()
 {
   // benchmark_minimal_cover(1, 4, 3, 0.5);
@@ -16,18 +18,16 @@ int main()
   // sim.RunSimulation();
 
   SimulationManager m;
-  m.LoadParameters({.sensor_radious = 0.3, .initial_battery_lvl = 64, .reshuffle_interval = 8});
+  m.SetStopCondition(SimulationStopCondition::kZeroCoverage);
   // m.LoadFromJSON("config.json");
-  m.LoadRandomScenario(8, 24);
+  m.LoadParameters({.sensor_radious = 0.4, .initial_battery_lvl = 64, .reshuffle_interval = 8});
+  // m.LoadRandomScenario(8, 32);
+  m.LoadScenario({.target_positions = {Point(0.1, 0.2), Point(0.3, 0.2)},
+                  .sensor_positions = {Point(0.2, 0.1), Point(0.2, 0.3)}});
   m.Initialize();
-  SimulationState state;
-  do
-  {
-    m.Tick();
-    state = m.GetCurrentState();
-  } while (state.covered_target_count != 0);
-  std::cout << "Lifetime: " << state.tick;
-
+  m.Run(1000);
+  auto states = m.GetSimulationStates();
+  std::cout << "Lifetime: " << states.back().tick << '\n';
   return 0;
 }
 

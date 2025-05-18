@@ -1,16 +1,35 @@
 #include "api/SimulationManager.hpp"
-#include <fstream>
-#include "api/json.hpp"
-#include "shared/data_structures.hpp"
-
 #define RD 0
-
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Point, x, y)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationScenario, sensor_positions, target_positions)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationParameters, sensor_radious, initial_battery_lvl, reshuffle_interval)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationState, tick, all_target_covered, covered_target_count, is_target_covered, sensor_states, sensor_battery_lvls)
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationState, tick, all_target_covered, covered_target_count, is_target_covered, sensor_states, sensor_battery_lvls)
+
+void SimulationManager::SetStopCondition(StopCondition condition, float threshold)
+{
+  condition_ = condition;
+  stop_threshold_ = threshold;
+}
+
+const SimulationParameters &SimulationManager::GetParameters() const
+{
+  if (!parameters_.has_value())
+  {
+    throw std::runtime_error("Parameters not set");
+  }
+  return parameters_.value();
+}
+
+const SimulationScenario &SimulationManager::GetScenario() const
+{
+  if (!scenario_.has_value())
+  {
+    throw std::runtime_error("Scenario not set");
+  }
+  return scenario_.value();
+}
 
 void SimulationManager::LoadFromJSON(const std::string &json_path)
 {
@@ -29,10 +48,11 @@ void SimulationManager::LoadFromJSON(const std::string &json_path)
   parameters_ = j.at("parameters").get<SimulationParameters>();
 }
 
-void SimulationManager::LoadRandomScenario(uint16_t target_num, uint16_t sensor_num)
+void SimulationManager::LoadRandomScenario(uint32_t target_num, uint32_t sensor_num)
 {
-  auto &target_positions = scenario_.target_positions;
-  auto &sensor_positions = scenario_.sensor_positions;
+  scenario_ = SimulationScenario();
+  auto &target_positions = scenario_->target_positions;
+  auto &sensor_positions = scenario_->sensor_positions;
   std::random_device rd;
 #ifdef RD
   std::mt19937 gen(RD);
@@ -54,11 +74,64 @@ void SimulationManager::LoadRandomScenario(uint16_t target_num, uint16_t sensor_
 
 void SimulationManager::Initialize()
 {
-  simulation_.Initialize(parameters_, scenario_);
+  if (!parameters_.has_value())
+  {
+    throw std::runtime_error("Parameters not set");
+  }
+  if (!scenario_.has_value())
+  {
+    throw std::runtime_error("Scenario not set");
+  }
+  if (simulation_.has_value())
+  {
+    throw std::runtime_error("Simulation already initialized");
+  }
+  simulation_ = Simulation();
+  simulation_->Initialize(*parameters_, *scenario_);
 }
 
-void SimulationManager::Tick()
+void SimulationManager::Run(uint32_t max_ticks)
 {
-  simulation_.Tick();
-  state_ = simulation_.GetSimulationState();
+  if (!simulation_.has_value())
+  {
+    throw std::runtime_error("Simulation not initialized");
+  }
+  for (uint32_t i = 0; i < max_ticks; ++i)
+  {
+    simulation_->Tick();
+    SimulationState state = simulation_->GetSimulationState();
+    states_.emplace_back(state);
+    if (ShouldStop(state))
+    {
+      break;
+    }
+  }
+}
+
+void SimulationManager::Reset()
+{
+  simulation_.reset();
+  states_.clear();
+}
+
+bool SimulationManager::ShouldStop(SimulationState state)
+{
+  switch (condition_)
+  {
+  case StopCondition::kManual:
+    return false;
+    break;
+  case StopCondition::kZeroCoverage:
+    return !state.all_target_covered;
+    break;
+  case StopCondition::kCoverageBelowThreshold:
+    return state.coverage_percentage < stop_threshold_;
+    break;
+  case StopCondition::kAnyCoverageLost:
+    return state.covered_target_count == 0;
+    break;
+  default:
+    return false;
+    break;
+  }
 }

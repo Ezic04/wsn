@@ -40,7 +40,7 @@ void Simulation::Initialize(const SimulationParameters &parameters, const Simula
   }
 }
 
-void Simulation::Initialize(uint16_t target_num, uint16_t sensor_num, double sensor_radious)
+void Simulation::Initialize(uint32_t target_num, uint32_t sensor_num, double sensor_radious)
 {
   if (!(0.0 < sensor_radious && sensor_radious < 1.0))
   {
@@ -118,7 +118,7 @@ void Simulation::PlaceAtPositions(const std::vector<Point> &target_positions, co
   }
 }
 
-void Simulation::PlaceSensors(uint16_t target_num, uint16_t sensor_num)
+void Simulation::PlaceSensors(uint32_t target_num, uint32_t sensor_num)
 {
   std::random_device rd;
 #ifdef RD

@@ -1,38 +1,44 @@
 #pragma once
 #include <vector>
-#include "api/json.hpp"
+#include <fstream>
+#include <optional>
 #include "core/Simulation.hpp"
+#include "shared/utility.hpp"
 #include "shared/data_structures.hpp"
-
-enum class StopCondition
-{
-  kAnyCoverageLost,
-  kCoverageBelowThreshold,
-  kZeroCoverage,
-  kManual
-};
+#include "api/json.hpp"
 
 class SimulationManager
 {
-  SimulationParameters parameters_;
-  SimulationScenario scenario_;
-  SimulationState state_;
-  Simulation simulation_;
+public:
+  enum class StopCondition
+  {
+    kManual,
+    kZeroCoverage,
+    kCoverageBelowThreshold,
+    kAnyCoverageLost
+  };
+
+private:
+  std::optional<SimulationParameters> parameters_;
+  std::optional<SimulationScenario> scenario_;
+  std::optional<Simulation> simulation_;
+  std::vector<SimulationState> states_;
+  StopCondition condition_;
+  float stop_threshold_;
 
 public:
-  SimulationManager() = default;
-  SimulationState GetCurrentState() const { return state_; }
-  const SimulationParameters &GetParameters() const { return parameters_; }
-  const SimulationScenario &GetScenario() const { return scenario_; }
+  void SetStopCondition(StopCondition condition, float threshold = 0.9f);
+  const std::vector<SimulationState> &GetSimulationStates() const { return states_; }
+  const SimulationParameters &GetParameters() const;
+  const SimulationScenario &GetScenario() const;
   void LoadFromJSON(const std::string &json_path);
   void LoadParameters(const SimulationParameters &paramseters) { parameters_ = paramseters; }
   void LoadScenario(const SimulationScenario &scenario) { scenario_ = scenario; }
-  void LoadRandomScenario(uint16_t target_num, uint16_t sensor_num);
+  void LoadRandomScenario(uint32_t target_num, uint32_t sensor_num);
   void Initialize();
-  void Tick();
-  // void Reset();
-  // // std::vector<SimulationState> RunAndCollect();
+  void Run(uint32_t max_ticks);
+  void Reset();
 
-  // // Export
-  // // std::string DumpStateAsJSON() const;
+private:
+  bool ShouldStop(SimulationState state);
 };

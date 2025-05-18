@@ -72,7 +72,6 @@ void Sensor::Initialization()
     std::string msg = std::format("more than {} sensors for: {} ({},{})", bit_vec_size-1, this->GetId(), position_.x, position_.y);
     throw std::runtime_error(msg);
   }
-
   std::vector<Sensor *> all_sensors = local_sensors_;
   all_sensors.emplace_back(this);
   std::tie(covers_, local_graph_) = LDGraphGenerator{all_sensors, local_targets_}();

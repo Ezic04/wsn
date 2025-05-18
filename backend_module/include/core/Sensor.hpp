@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #include "shared/utility.hpp"
-#include "core/LDGraph.hpp"
+#include "core/cover_structures.hpp"
 
 class Entity
 {

@@ -1,15 +1,17 @@
 include_directories(${PYBIND_PATH})
 
-set(core_src 
+set(core_src
     core/Simulation.cpp
     core/Sensor.cpp
     core/GenerateLDGraph.cpp
 )
 
-set(api_src 
+set(api_src
     api/bind.cpp
     api/SimulationManager.cpp
 )
+
+message(STATUS "pybind11 includes: ${pybind11_INCLUDE_DIRS}")
 
 pybind11_add_module(backend_module ${core_src} ${api_src})
 
@@ -25,6 +27,6 @@ install(TARGETS backend_module
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-add_executable(cpp_test test.cpp ${core_src})
+add_executable(cpp_test test.cpp ${core_src} api/SimulationManager.cpp)
 
 target_include_directories(cpp_test PRIVATE ${include_dir_path})

@@ -7,14 +7,14 @@ class Sensor;
 
 using bit_vec = uint32_t;
 
-constexpr static uint8_t bit_vec_size = 32;
+constexpr static uint8_t bit_vec_size = 24;
 
 struct Cover
 {
   std::vector<Sensor *> sensors;
   uint16_t degree;
   uint16_t lifetime;
-  uint16_t remaining_to_on; // for this cover
+  uint16_t remaining_to_on;
   uint32_t min_id;
   bool feasible = true;
   
@@ -29,19 +29,7 @@ struct Cover
   {
     return std::ranges::find(sensors, sensor) != sensors.end();
   }
-
-  // bool IsSatisfied(Sensor* self) const {
-  // for (Sensor* s : sensors) {
-  //   if (s == self && !contains(self)) // nie należy do pokrycia
-  //     continue;
-  //   if (s->GetState() != State::kOn)
-  //     return false;
-  // }
-  // return true;
-// }
 };
-
-// using CoverData = std::vector<Cover>; // data about covers with given Id 
 
 using Edge = std::pair<uint32_t, uint16_t>; // (cover_idx, weight)
 

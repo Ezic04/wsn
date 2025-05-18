@@ -5,7 +5,7 @@
 #include <map>
 #include <unordered_map>
 
-#include "core/LDGraph.hpp"
+#include "core/cover_structures.hpp"
 #include "core/Sensor.hpp"
 
 class LDGraphGenerator

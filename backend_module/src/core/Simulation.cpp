@@ -70,8 +70,8 @@ SimulationState Simulation::GetSimulationState()
   sensor_battery_lvls.reserve(sensor_num);
   for (int i = 0; i < sensor_num; ++i)
   {
-    sensor_states[i] = sensors_[i].GetState();
-    sensor_battery_lvls[i] = sensors_[i].GetBateryLevel();
+    sensor_states.emplace_back(sensors_[i].GetState());
+    sensor_battery_lvls.emplace_back(sensors_[i].GetBateryLevel());
   }
 
   state.tick = tick_;

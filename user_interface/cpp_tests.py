@@ -13,10 +13,7 @@ m = backend.SimulationManager()
 m.SetStopCondition(backend.StopCondition.kZeroCoverage, 0.9)
 m.LoadParameters(param)
 m.LoadScenario(scenario)
-
 m.Initialize()
-print("v bug v")
-
 m.Run(1000)
 states = m.GetSimulationStates()
 print(f"Lifetime: {states[-1].tick}")

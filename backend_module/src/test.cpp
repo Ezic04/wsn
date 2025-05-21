@@ -19,15 +19,16 @@ int main()
 
   SimulationManager m;
   m.SetStopCondition(SimulationStopCondition::kZeroCoverage);
-  // m.LoadFromJSON("config.json");
-  m.LoadParameters({.sensor_radious = 0.4, .initial_battery_lvl = 64, .reshuffle_interval = 8});
-  // m.LoadRandomScenario(8, 32);
-  m.LoadScenario({.target_positions = {Point(0.1, 0.2), Point(0.3, 0.2)},
-                  .sensor_positions = {Point(0.2, 0.1), Point(0.2, 0.3)}});
+  m.LoadFromJSON("config.json");
+  // m.LoadParameters({.sensor_radious = 0.4, .initial_battery_lvl = 64, .reshuffle_interval = 8});
+  // // m.LoadRandomScenario(8, 32);
+  // m.LoadScenario({.target_positions = {Point(0.1, 0.2), Point(0.3, 0.2)},
+  //                 .sensor_positions = {Point(0.2, 0.1), Point(0.2, 0.3)}});
   m.Initialize();
   m.Run(1000);
   auto states = m.GetSimulationStates();
   std::cout << "Lifetime: " << states.back().tick << '\n';
+  std::cout << "Sensors: " << states.back().sensor_states.size() << '\n';
   return 0;
 }
 

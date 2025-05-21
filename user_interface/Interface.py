@@ -1,90 +1,173 @@
-from lib.backend_module import backend_module as backend
-from PIL import Image, ImageTk, ImageDraw
-from PIL.Image import Resampling
 import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk, ImageDraw, ImageOps
+from PIL.Image import Resampling
+from lib.backend_module import backend_module as backend
 
 class Interface(tk.Tk):
   def __init__(self):
-    tk.Tk.__init__(self)
-    self.title("WSN simulation")
-    self.geometry("1000x900")
+    super().__init__()
+    self.title("WSN Simulation")
+    self.geometry("1000x950")
 
+    # --- UI: control panel ---
+    self.ctrl = tk.Frame(self)
+    self.ctrl.pack(fill="x", padx=10, pady=5)
+
+    tk.Button(self.ctrl, text="Load JSON…", command=self.load_json).pack(side="left")
+    tk.Button(self.ctrl, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
+    self.auto_btn = tk.Button(self.ctrl, text="Auto ▶▶", command=self.toggle_auto)
+    self.auto_btn.pack(side="left")
+    tk.Label(self.ctrl, text="Delay(ms):").pack(side="left", padx=(20,0))
+    self.delay_var = tk.IntVar(value=200)
+    tk.Spinbox(self.ctrl, from_=50, to=2000, increment=50,
+               textvariable=self.delay_var, width=5).pack(side="left")
+    tk.Button(self.ctrl, text="Save States…", command=self.save_states).pack(side="left", padx=5)
+
+    # --- Canvas ---
     self.canvas_size = 800
-    self.canvas = tk.Canvas(self, width= self.canvas_size, height=self.canvas_size, bg="white")
-    self.canvas.pack(pady=20)
+    self.canvas = tk.Canvas(self, bg="white",
+                            width=self.canvas_size, height=self.canvas_size)
+    self.canvas.pack(pady=10)
 
-    self.sim = backend.Simulation()
-    self.sim.Initialization(20, 40, 0.2)
+    # --- Status bar ---
+    self.status = tk.Label(self, text="No simulation loaded", anchor="w")
+    self.status.pack(fill="x", padx=10, pady=(0,10))
 
-    rs = 1
-    rt = 3 
-    R = int(backend.Sensor.Radius*self.canvas_size)
-    img_size = self.canvas_size//4
-    base_layer = Image.new("RGBA", (self.canvas_size, self.canvas_size), (255, 255, 255, 0))
+    # --- Internal state ---
+    self.manager = backend.SimulationManager()
+    self.states = []
+    self.current_idx = 0
+    self._job = None
+    self.running = False
 
-    bg_img = base_layer.copy()
-    range_layer   = base_layer.copy()
-    outline_layer = base_layer.copy()
-    sensor_layer  = base_layer.copy()
-    target_layer  = base_layer.copy()
+  def toggle_auto(self):
+    if self.running:
+      self.stop_auto()
+    else:
+      self.start_auto()
 
-    range_img  = self.CreateCircleImg(img_size, R,(192, 255, 255, 64))
-    outline_img = self.CreateCircleImg(img_size, R, (0, 0, 0, 0), (16, 96, 192, 192))
-    sensor_img = self.CreateCircleImg(img_size, rs, (24, 128, 192, 255) )
-    target_img = self.CreateCircleImg(img_size, rt,  (255,32, 128, 255))
-# (255, 180, 167, 64)
-    for i in range(0, self.sim.Sensors.__len__()):
-      pos = self.PointToIntTuple(self.sim.Sensors[i].position * self.canvas_size)
-      self.PasteCircle(range_layer, range_img, pos, R)
-      self.PasteCircle(outline_layer, outline_img, pos, R)
-      self.PasteCircle(sensor_layer, sensor_img, pos, rs)
-    for i in range(0, self.sim.Targets.__len__()):
-      pos = self.PointToIntTuple(self.sim.Targets[i].position * self.canvas_size)
-      self.PasteCircle(target_layer, target_img, pos, rt)
+  def start_auto(self):
+    if not self.states: return
+    self.running = True
+    self.auto_btn.config(text="Pause ❚❚")
+    self._auto_step()
 
-    bg_img = Image.alpha_composite(bg_img, range_layer)
-    bg_img = Image.alpha_composite(bg_img, outline_layer)
-    bg_img = Image.alpha_composite(bg_img, sensor_layer)
-    bg_img = Image.alpha_composite(bg_img, target_layer)
+  def stop_auto(self):
+    self.running = False
+    self.auto_btn.config(text="Auto ▶▶")
+    if self._job:
+      self.after_cancel(self._job)
+      self._job = None
 
-    bg_img = bg_img.convert("RGB")
+  def _auto_step(self):
+    if self.current_idx < len(self.states) - 1 and self.running:
+      self.current_idx += 1
+      self._draw_state(self.states[self.current_idx])
+      self._job = self.after(self.delay_var.get(), self._auto_step)
+    else:
+      self.stop_auto()
 
-    self.tk_image = ImageTk.PhotoImage(bg_img)
-    self.canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_image)
+  def step_once(self):
+    if not self.states: return
+    if self.current_idx < len(self.states) - 1:
+      self.current_idx += 1
+      self._draw_state(self.states[self.current_idx])
 
-    self.sim.RunSimulation()
+  def load_json(self):
+    path = filedialog.askopenfilename(filetypes=[("JSON files","*.json")])
+    if not path: return
+    try:
+      self.stop_auto()
+      self.manager.Reset()
+      self.manager.SetStopCondition(backend.StopCondition.kZeroCoverage, 0.0)
+      self.manager.LoadFromJSON(path)
+      self.manager.Initialize()
+      self.manager.Run(100000)
 
+      self.states = list(self.manager.GetSimulationStates())
+      if not self.states:
+        messagebox.showwarning("Warning", "No states generated")
+        return
 
-  def DrawFromList(self, list, img: Image.Image , r: int, bg_img) -> None:
-    for it in list:
-      pos = self.PointToIntTuple(it.position * self.canvas_size)
-      self.PasteCircle(bg_img, img, pos, r)
+      self.current_idx = 0
+      self._draw_state(self.states[0])
+      self.status.config(text=f"Tick: 0 / {len(self.states)-1}")
+    except Exception as e:
+      messagebox.showerror("Error", str(e))
 
+  def save_states(self):
+    if not self.states:
+      messagebox.showwarning("Warning", "No states to save")
+      return
+    path = filedialog.asksaveasfilename(defaultextension=".json",
+                                        filetypes=[("JSON","*.json")])
+    if not path: return
+    try:
+      # self.manager.DumpStatesAsJSON(path) //to implement
+      messagebox.showinfo("Saved", f"States written to {path}")
+    except Exception as e:
+      messagebox.showerror("Error", str(e))
 
-  def CreateCircleImg(self, size: int, r: int, 
-                       color: tuple[int, int, int, int], 
-                       outline: tuple[int, int, int, int] | None = None ) -> Image.Image:
-    img_up = Image.new("RGBA", (size+2, size+2), (255, 255, 255, 0))
-    draw = ImageDraw.Draw(img_up)
-    draw.ellipse((1, 1, size+1, size+1), fill=color, outline=outline)
-    r2 = 2*r+1
-    img = img_up.resize((r2,r2), Resampling.LANCZOS)
-    return img
-  
+  def _draw_state(self, state):
+    size = self.canvas_size
+    # prepare empty layers
+    base = Image.new("RGBA", (size, size), (255,255,255,0))
+    range_layer = base.copy()
+    outline_layer = base.copy()
+    sensor_layer = base.copy()
+    target_layer = base.copy()
+    draw_range = ImageDraw.Draw(range_layer)
+    draw_outline = ImageDraw.Draw(outline_layer)
+    draw_sensor = ImageDraw.Draw(sensor_layer)
+    draw_target = ImageDraw.Draw(target_layer)
 
-  def PointToIntTuple(self, point: backend.Point ) -> tuple[int, int]:
-    return (int(point.x), int(point.y))
+    scen = self.manager.GetScenario()
+    params = self.manager.GetParameters()
 
+    for i, s_state in enumerate(state.sensor_states):
+      if s_state == backend.SensorState.kOn:
+        pt = scen.sensor_positions[i]
+        x = int(pt.x * size)
+        y = int(pt.y * size)
+        R = int(params.sensor_radious * size)
+        # semi-transparent fill
+        draw_range.ellipse((x-R, y-R, x+R, y+R), fill=(192, 255, 192, 64))
+        # outline
+        draw_outline.ellipse((x-R, y-R, x+R, y+R), outline=(16, 192, 128, 128), width=2)
 
-  def PasteCircle(self, bg_img: Image.Image, img: Image.Image, pos: tuple[int, int], r: int) -> None:
-    x, y = pos
-    bg_img.paste(img, (x-r, y-r), img)
-  
-    
+    for i, s_state in enumerate(state.sensor_states):
+      pt = scen.sensor_positions[i]
+      x = int(pt.x * size)
+      y = int(pt.y * size)
+      if s_state == backend.SensorState.kOn:
+        color = (0,150,0)
+      elif s_state == backend.SensorState.kOff:
+        color = (100,100,100)
+      else:
+        color = (200,0,0)
+      draw_sensor.ellipse((x-3, y-3, x+3, y+3), fill=color)
+
+    for j, covered in enumerate(state.is_target_covered):
+      pt = scen.target_positions[j]
+      x = int(pt.x * size)
+      y = int(pt.y * size)
+      color = (0,0,0) if covered else (150,150,150)
+      draw_target.rectangle((x-2, y-2, x+2, y+2), fill=color)
+
+    # composite: base->range->outline->sensor->target
+    img = Image.alpha_composite(base, range_layer)
+    img = Image.alpha_composite(img, outline_layer)
+    img = Image.alpha_composite(img, sensor_layer)
+    img = Image.alpha_composite(img, target_layer)
+
+    self.tk_img = ImageTk.PhotoImage(img.convert("RGB"))
+    self.canvas.create_image(0, 0, anchor="nw", image=self.tk_img)
+
+    self.status.config(text=f"Tick: {state.tick} / {len(self.states)-1}")
+
   def run(self):
     self.mainloop()
 
-
 if __name__ == "__main__":
-  i = Interface()
-  i.run()
+  Interface().run()

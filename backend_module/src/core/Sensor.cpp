@@ -53,7 +53,7 @@ void PrintLDGraph(const LDGraph &graph)
   }
 }
 
-void Sensor::Initialization()
+void Sensor::Initialize()
 {
   auto target_num = local_targets_.size();
   auto sensor_num = local_sensors_.size();

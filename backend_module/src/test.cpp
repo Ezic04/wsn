@@ -5,7 +5,6 @@
 #include "core/minimal_cover.hpp"
 #include "api/SimulationManager.hpp"
 
-using SimulationStopCondition = SimulationManager::StopCondition;
 
 int main()
 {
@@ -18,14 +17,9 @@ int main()
   // sim.RunSimulation();
 
   SimulationManager m;
-  m.SetStopCondition(SimulationStopCondition::kZeroCoverage);
   m.LoadFromJSON("config.json");
-  // m.LoadParameters({.sensor_radious = 0.4, .initial_battery_lvl = 64, .reshuffle_interval = 8});
-  // // m.LoadRandomScenario(8, 32);
-  // m.LoadScenario({.target_positions = {Point(0.1, 0.2), Point(0.3, 0.2)},
-  //                 .sensor_positions = {Point(0.2, 0.1), Point(0.2, 0.3)}});
   m.Initialize();
-  m.Run(1000);
+  m.Run();
   auto states = m.GetSimulationStates();
   std::cout << "Lifetime: " << states.back().tick << '\n';
   std::cout << "Sensors: " << states.back().sensor_states.size() << '\n';
@@ -64,7 +58,6 @@ void generate_random_coverage(int num_sensors, int num_targets, float coverage_d
   }
 }
 
-// Function to benchmark the minimal cover algorithm
 void benchmark_minimal_cover(int iterations, int num_sensors, int num_targets, float coverage_density)
 {
   std::cout << "Benchmarking with " << num_sensors << " sensors, "
@@ -75,10 +68,8 @@ void benchmark_minimal_cover(int iterations, int num_sensors, int num_targets, f
 
   for (int i = 0; i < iterations; ++i)
   {
-    // Generate a new random coverage scenario
     generate_random_coverage(num_sensors, num_targets, coverage_density);
 
-    // Measure time
     auto start = std::chrono::high_resolution_clock::now();
     minimal_covers();
     auto end = std::chrono::high_resolution_clock::now();
@@ -98,20 +89,15 @@ void benchmark_minimal_cover(int iterations, int num_sensors, int num_targets, f
             << " ms per run\n";
 }
 
-// Function to run multiple benchmarks with different parameters
 void run_benchmarks()
 {
   std::cout << "=== Minimal Cover Algorithm Benchmarks ===\n";
 
-  // Test with small problem sizes
   benchmark_minimal_cover(10, 3, 2, 0.5);
 
-  // Test with medium problem sizes
   benchmark_minimal_cover(10, 10, 5, 0.3);
 
-  // Test with larger problem sizes
   benchmark_minimal_cover(10, 15, 8, 0.2);
 
-  // Test with different coverage densities
   benchmark_minimal_cover(10, 8, 4, 0.7);
 }

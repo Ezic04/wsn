@@ -80,10 +80,9 @@ class Interface(tk.Tk):
     try:
       self.stop_auto()
       self.manager.Reset()
-      self.manager.SetStopCondition(backend.StopCondition.kZeroCoverage, 0.0)
       self.manager.LoadFromJSON(path)
       self.manager.Initialize()
-      self.manager.Run(100000)
+      self.manager.Run()
 
       self.states = list(self.manager.GetSimulationStates())
       if not self.states:

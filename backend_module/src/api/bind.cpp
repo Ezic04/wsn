@@ -7,45 +7,6 @@
 
 namespace py = pybind11;
 
-// PYBIND11_MAKE_OPAQUE(std::vector<Target>);
-// PYBIND11_MAKE_OPAQUE(std::vector<Sensor>);
-
-
-// PYBIND11_MODULE(backend_module, m)
-// { 
-//     py::class_<Point>(m, "Point")
-//     .def(py::init<>())
-//     .def(py::init<float, float>())
-//     .def_readwrite("x", &Point::x)
-//     .def_readwrite("y", &Point::y)
-//     .def("__mul__", &Point::operator*)
-//     .def("__imul__", &Point::operator*=);
-
-
-//     py::class_<Target>(m, "Target")
-//     .def(py::init<Point>())    
-//     .def_property_readonly("position", &Target::GetPosition);
-    
-//     py::class_<Sensor>(m, "Sensor")
-//     .def(py::init<Point, uint32_t>())
-//     .def_property_readonly_static("Radius", [](py::object /* cls */) { return Sensor::GetRadius(); })
-//     .def_property_readonly("position", &Sensor::GetPosition);
-    
-//     py::bind_vector<std::vector<Target>>(m, "VectorTarget");
-//     py::bind_vector<std::vector<Sensor>>(m, "VectorSensor");
-    
-//     py::class_<Simulation>(m, "Simulation")
-//     .def(py::init<>())
-//     .def("Initialization", &Simulation::Initialize, 
-//         py::arg("target_num"), py::arg("sensor_num"), py::arg("sensor_radious"))
-//         .def_readonly("Targets", &Simulation::targets_)
-//         .def_readonly("Sensors", &Simulation::sensors_)
-//         .def("RunSimulation", &Simulation::RunSimulation);
-
-// };
-
-namespace py = pybind11;
-
 PYBIND11_MAKE_OPAQUE(std::vector<bool>);
 PYBIND11_MAKE_OPAQUE(std::vector<uint32_t>);
 PYBIND11_MAKE_OPAQUE(std::vector<int32_t>);
@@ -89,15 +50,15 @@ PYBIND11_MODULE(backend_module, m)
     .def_readwrite("sensor_states", &SimulationState::sensor_states)
     .def_readwrite("sensor_battery_lvls", &SimulationState::sensor_battery_lvls);
 
-  py::enum_<SimulationManager::StopCondition>(m, "StopCondition")
-    .value("kManual", SimulationManager::StopCondition::kManual)
-    .value("kZeroCoverage", SimulationManager::StopCondition::kZeroCoverage)
-    .value("kCoverageBelowThreshold", SimulationManager::StopCondition::kCoverageBelowThreshold)
-    .value("kAnyCoverageLost", SimulationManager::StopCondition::kAnyCoverageLost);
+  py::enum_<SimulationStopCondition>(m, "SimulationStopCondition")
+    .value("kManual", SimulationStopCondition::kManual)
+    .value("kZeroCoverage", SimulationStopCondition::kZeroCoverage)
+    .value("kCoverageBelowThreshold", SimulationStopCondition::kCoverageBelowThreshold)
+    .value("kAnyCoverageLost", SimulationStopCondition::kAnyCoverageLost);
 
   py::class_<SimulationManager>(m, "SimulationManager")
     .def(py::init<>())
-    .def("SetStopCondition", &SimulationManager::SetStopCondition)
+    // .def("SetStopCondition", &SimulationManager::SetStopCondition)
     .def("GetSimulationStates", &SimulationManager::GetSimulationStates, py::return_value_policy::reference)
     .def("GetParameters", &SimulationManager::GetParameters, py::return_value_policy::reference)
     .def("GetScenario", &SimulationManager::GetScenario, py::return_value_policy::reference)

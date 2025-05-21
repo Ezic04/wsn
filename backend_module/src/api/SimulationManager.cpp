@@ -1,17 +1,13 @@
 #include "api/SimulationManager.hpp"
+
 #define RD 0
-using json = nlohmann::json;
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Point, x, y)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationScenario, sensor_positions, target_positions)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationParameters, sensor_radious, initial_battery_lvl, reshuffle_interval)
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationState, tick, all_target_covered, covered_target_count, is_target_covered, sensor_states, sensor_battery_lvls)
 
-void SimulationManager::SetStopCondition(StopCondition condition, float threshold)
-{
-  condition_ = condition;
-  stop_threshold_ = threshold;
-}
+// void SimulationManager::SetStopCondition(SimulationStopCondition condition, float threshold)
+// {
+//   condition_ = condition;
+//   stop_threshold_ = threshold;
+// }
 
 const SimulationParameters &SimulationManager::GetParameters() const
 {
@@ -46,6 +42,16 @@ void SimulationManager::LoadFromJSON(const std::string &json_path)
   }
   scenario_ = j.at("scenario").get<SimulationScenario>();
   parameters_ = j.at("parameters").get<SimulationParameters>();
+}
+
+void SimulationManager::LoadParameters(const SimulationParameters &parameters)
+{
+  parameters_ = parameters;
+}
+
+void SimulationManager::LoadScenario(const SimulationScenario &scenario)
+{
+  scenario_ = scenario;
 }
 
 void SimulationManager::LoadRandomScenario(uint32_t target_num, uint32_t sensor_num)
@@ -90,12 +96,13 @@ void SimulationManager::Initialize()
   simulation_->Initialize(*parameters_, *scenario_);
 }
 
-void SimulationManager::Run(uint32_t max_ticks)
+void SimulationManager::Run()
 {
   if (!simulation_.has_value())
   {
     throw std::runtime_error("Simulation not initialized");
   }
+  auto max_ticks = parameters_->max_ticks;
   for (uint32_t i = 0; i < max_ticks; ++i)
   {
     simulation_->Tick();
@@ -116,18 +123,18 @@ void SimulationManager::Reset()
 
 bool SimulationManager::ShouldStop(SimulationState state)
 {
-  switch (condition_)
+  switch (parameters_->stop_condition)
   {
-  case StopCondition::kManual:
+  case SimulationStopCondition::kManual:
     return false;
     break;
-  case StopCondition::kZeroCoverage:
+  case SimulationStopCondition::kZeroCoverage:
     return !state.all_target_covered;
     break;
-  case StopCondition::kCoverageBelowThreshold:
-    return state.coverage_percentage < stop_threshold_;
+  case SimulationStopCondition::kCoverageBelowThreshold:
+    return state.coverage_percentage < parameters_->stop_threshold;
     break;
-  case StopCondition::kAnyCoverageLost:
+  case SimulationStopCondition::kAnyCoverageLost:
     return state.covered_target_count == 0;
     break;
   default:

@@ -54,14 +54,14 @@ private:
 public:
   Sensor(Point position, uint32_t battery_lvl) : Entity(position), Id<Sensor>(), battery_lvl_(battery_lvl), state_(State::kUndecided) {}
   Sensor(const Sensor &other) = default;
-  void Initialization();
-  static void SetRadius(double radius) { Radius = radius; }
-  static double GetRadius() { return Radius; }
-  State GetState() const { return state_; }
-  uint16_t GetBateryLevel() const { return battery_lvl_; }
-  bool IsLocalTarget(Target &target) const { return std::ranges::find(local_targets_, &target) != local_targets_.end(); }
-  void AddLocalTarget(Target &target) { local_targets_.emplace_back(&target); }
-  void AddLocalSensor(Sensor &sensor) { local_sensors_.emplace_back(&sensor); }
+  void Initialize();
+  inline static void SetRadius(double radius) { Radius = radius; }
+  inline static double GetRadius() { return Radius; }
+  inline State GetState() const { return state_; }
+  inline uint16_t GetBateryLevel() const { return battery_lvl_; }
+  inline bool IsLocalTarget(Target &target) const { return std::ranges::find(local_targets_, &target) != local_targets_.end(); }
+  inline void AddLocalTarget(Target &target) { local_targets_.emplace_back(&target); }
+  inline void AddLocalSensor(Sensor &sensor) { local_sensors_.emplace_back(&sensor); }
   void Update();
   void BeginReshuffle();
   bool Reshuffle();

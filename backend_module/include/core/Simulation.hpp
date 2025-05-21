@@ -24,14 +24,14 @@ public: // to remove
 public:
   Simulation() : tick_(-1), all_target_covered_(false), covered_tragets_count_(0) {}
   void Initialize(const SimulationParameters &parameters, const SimulationScenario &scenario);
-  void Initialize(uint32_t target_num, uint32_t sensor_num, double sensor_radious);
+  // void Initialize(uint32_t target_num, uint32_t sensor_num, double sensor_radious);
   SimulationState GetSimulationState();
   void RunSimulation();
   void Tick();
 
 private:
   void PlaceAtPositions(const std::vector<Point> &target_positions, const std::vector<Point> &sensor_positions);
-  void PlaceSensors(uint32_t target_num, uint32_t sensor_num);
+  // void PlaceSensors(uint32_t target_num, uint32_t sensor_num);
   void SortByPositions();
   void SortById();
   void DetermineNeighborhoods();

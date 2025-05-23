@@ -6,13 +6,12 @@
 #include <algorithm>
 #include <iostream> //for debug
 #include "shared/utility.hpp"
-#include "shared/data_structures.hpp"
+#include "shared/simulation_structures.hpp"
 
 class Simulation
 {
-public: // to remove
-  uint32_t reshuffle_interval_ = 8;
-  uint32_t initial_batterry_lvl_ = 64;
+  uint32_t reshuffle_interval_;
+  uint32_t initial_batterry_lvl_;
   uint32_t tick_;
   uint32_t covered_tragets_count_;
   bool all_target_covered_;

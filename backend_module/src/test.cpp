@@ -17,12 +17,14 @@ int main()
   // sim.RunSimulation();
 
   SimulationManager m;
-  m.LoadFromJSON("config.json");
+  m.LoadParametersFromJSON("config.json");
+  m.LoadScenarioFromJSON("config.json");
   m.Initialize();
   m.Run();
   auto states = m.GetSimulationStates();
   std::cout << "Lifetime: " << states.back().tick << '\n';
   std::cout << "Sensors: " << states.back().sensor_states.size() << '\n';
+  // m.DumpStatesToJSON("states.json");
   return 0;
 }
 

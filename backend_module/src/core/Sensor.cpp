@@ -57,7 +57,7 @@ void Sensor::Initialize()
 {
   auto target_num = local_targets_.size();
   auto sensor_num = local_sensors_.size();
-  if (target_num == 0) // graph is not created
+  if (target_num == 0)
   {
     state_ = State::kDead;
     return;

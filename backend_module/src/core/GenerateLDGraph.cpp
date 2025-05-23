@@ -1,7 +1,16 @@
 #include "core/GenerateLDGraph.hpp"
 
-LDGraphGenerator::LDGraphGenerator(std::vector<Sensor *> &sensors, std::vector<Target *> &targets) : sensors_(sensors), targets_(targets), sensor_num_(sensors.size()), target_num_(targets.size()),
-                                                                                                     sensor_cover_masks_(), cover_masks_(), covers_(), graph_()
+LDGraphGenerator::LDGraphGenerator(
+    std::vector<Sensor *> &sensors,
+    std::vector<Target *> &targets)
+    : sensors_(sensors),
+      targets_(targets),
+      sensor_num_(sensors.size()),
+      target_num_(targets.size()),
+      sensor_cover_masks_(),
+      cover_masks_(),
+      covers_(),
+      graph_()
 {
 }
 
@@ -138,17 +147,16 @@ void LDGraphGenerator::GenetateCoverData()
     cover.degree = 0;
     for (const auto &[_, weight] : adj)
     {
-      cover.degree += weight; // could be done once
+      cover.degree += weight;
     }
     cover.lifetime = std::numeric_limits<uint16_t>::max();
     cover.remaining_to_on = cover.sensors.size();
     cover.min_id = std::numeric_limits<uint32_t>::max();
+    cover.feasible = false;
     for (const Sensor *sensor : cover.sensors)
     {
       cover.lifetime = std::min(cover.lifetime, sensor->GetBateryLevel());
-      cover.min_id = std::min(cover.min_id, sensor->GetId()); // could be done once
-      cover.feasible = false;
+      cover.min_id = std::min(cover.min_id, sensor->GetId());
     }
   }
-  std::sort(covers_.begin(), covers_.end());
 }

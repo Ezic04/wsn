@@ -1,8 +1,6 @@
 #pragma once
 #include <limits>
 #include <vector>
-#include <set>
-#include <map>
 #include <unordered_map>
 
 #include "core/cover_structures.hpp"

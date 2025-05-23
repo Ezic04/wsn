@@ -1,59 +1,92 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk, ImageDraw, ImageOps
-from PIL.Image import Resampling
+from PIL import Image, ImageTk, ImageDraw
 from lib.backend_module import backend_module as backend
 
 class Interface(tk.Tk):
   def __init__(self):
     super().__init__()
     self.title("WSN Simulation")
-    self.geometry("1000x950")
 
-    # --- UI: control panel ---
+    screen_width = self.winfo_screenwidth()
+    screen_height = self.winfo_screenheight()
+    win_width = min(1000, screen_width - 100)
+    win_height = min(900, screen_height - 100)
+    self.geometry(f"{win_width}x{win_height}")
+
     self.ctrl = tk.Frame(self)
     self.ctrl.pack(fill="x", padx=10, pady=5)
 
-    tk.Button(self.ctrl, text="Load JSON…", command=self.load_json).pack(side="left")
-    tk.Button(self.ctrl, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
-    self.auto_btn = tk.Button(self.ctrl, text="Auto ▶▶", command=self.toggle_auto)
-    self.auto_btn.pack(side="left")
-    tk.Label(self.ctrl, text="Delay(ms):").pack(side="left", padx=(20,0))
-    self.delay_var = tk.IntVar(value=200)
-    tk.Spinbox(self.ctrl, from_=50, to=2000, increment=50,
-               textvariable=self.delay_var, width=5).pack(side="left")
-    tk.Button(self.ctrl, text="Save States…", command=self.save_states).pack(side="left", padx=5)
+    # Left group: Load, Set, Save, Reset
+    left_group = tk.Frame(self.ctrl)
+    left_group.pack(side="left")
 
-    # --- Canvas ---
-    self.canvas_size = 800
+    # Load button with menu
+    load_btn = tk.Menubutton(left_group, text="Load", relief="raised")
+    load_btn.pack(side="left", padx=5)
+    load_menu = tk.Menu(load_btn, tearoff=0)
+    load_btn.config(menu=load_menu)
+    load_menu.add_command(label="Load both", command=self._load_both)
+    load_menu.add_command(label="Load parameters", command=self._load_parameters_only)
+    load_menu.add_command(label="Load scenario", command=self._load_scenario_only)
+  
+    # Set button with menu
+    set_btn = tk.Menubutton(left_group, text="Set", relief="raised")
+    set_btn.pack(side="left", padx=5)
+    set_menu = tk.Menu(set_btn, tearoff=0)
+    set_btn.config(menu=set_menu)
+    set_menu.add_command(label="Set parameters", command=self._set_parameters)
+    set_menu.add_command(label="Set scenario", command=self._set_scenario)
+
+    # Save and Reset buttons
+    tk.Button(left_group, text="Save Report…", command=self._save_report).pack(side="left", padx=5)
+    tk.Button(left_group, text="Reset", command=self._reset).pack(side="left", padx=5)
+
+    # Right group: Step, Auto, Delay
+    right_group = tk.Frame(self.ctrl)
+    right_group.pack(side="right")
+
+    # Manual Step and Auto buttons
+    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
+    self.auto_btn = tk.Button(right_group, text="Auto ▶▶", command=self._toggle_auto)
+    self.auto_btn.pack(side="left")
+    tk.Label(right_group, text="Delay(ms):").pack(side="left", padx=(20, 0))
+    self.delay_var = tk.IntVar(value=100)
+    tk.Spinbox(right_group, from_=20, to=2000, increment=20,
+               textvariable=self.delay_var, width=5).pack(side="left")
+
+    # Canvas and status
+    self.canvas_size = min(win_width - 100, win_height - 100)
     self.canvas = tk.Canvas(self, bg="white",
                             width=self.canvas_size, height=self.canvas_size)
     self.canvas.pack(pady=10)
 
-    # --- Status bar ---
     self.status = tk.Label(self, text="No simulation loaded", anchor="w")
-    self.status.pack(fill="x", padx=10, pady=(0,10))
+    self.status.pack(fill="x", padx=10, pady=(0, 10))
 
-    # --- Internal state ---
+
     self.manager = backend.SimulationManager()
+    self.parameters = None
+    self.scenario = None
     self.states = []
+    self.final_state = None
     self.current_idx = 0
     self._job = None
     self.running = False
 
-  def toggle_auto(self):
+  def _toggle_auto(self):
     if self.running:
-      self.stop_auto()
+      self._stop_auto()
     else:
-      self.start_auto()
+      self._start_auto()
 
-  def start_auto(self):
+  def _start_auto(self):
     if not self.states: return
     self.running = True
     self.auto_btn.config(text="Pause ❚❚")
     self._auto_step()
 
-  def stop_auto(self):
+  def _stop_auto(self):
     self.running = False
     self.auto_btn.config(text="Auto ▶▶")
     if self._job:
@@ -66,7 +99,7 @@ class Interface(tk.Tk):
       self._draw_state(self.states[self.current_idx])
       self._job = self.after(self.delay_var.get(), self._auto_step)
     else:
-      self.stop_auto()
+      self._stop_auto()
 
   def step_once(self):
     if not self.states: return
@@ -74,43 +107,231 @@ class Interface(tk.Tk):
       self.current_idx += 1
       self._draw_state(self.states[self.current_idx])
 
-  def load_json(self):
-    path = filedialog.askopenfilename(filetypes=[("JSON files","*.json")])
-    if not path: return
+  def _run_simulation(self):
+    if not self.parameters or not self.scenario:
+      messagebox.showwarning("Missing data", "Set both parameters and scenario first.")
+      return
     try:
-      self.stop_auto()
-      self.manager.Reset()
-      self.manager.LoadFromJSON(path)
+      self._stop_auto()
       self.manager.Initialize()
       self.manager.Run()
-
       self.states = list(self.manager.GetSimulationStates())
       if not self.states:
         messagebox.showwarning("Warning", "No states generated")
         return
-
+      self.final_state = self.states[-1]
       self.current_idx = 0
       self._draw_state(self.states[0])
       self.status.config(text=f"Tick: 0 / {len(self.states)-1}")
     except Exception as e:
       messagebox.showerror("Error", str(e))
 
-  def save_states(self):
-    if not self.states:
-      messagebox.showwarning("Warning", "No states to save")
+  def _handle_load(self, choice):
+    funcs = {
+      "Load both": self._load_both,
+      "Load parameters": self._load_parameters_only,
+      "Load scenario": self._load_scenario_only
+    }
+    func = funcs.get(choice)
+    if func:
+      func()
+
+  def _ask_and_load(self, load_params=False, load_scenario=False):
+    if self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "Reset the simulation first")
       return
-    path = filedialog.asksaveasfilename(defaultextension=".json",
-                                        filetypes=[("JSON","*.json")])
-    if not path: return
+    path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+    if not path:
+      return
     try:
-      # self.manager.DumpStatesAsJSON(path) //to implement
-      messagebox.showinfo("Saved", f"States written to {path}")
+      if load_params:
+        self.manager.LoadParametersFromJSON(path)
+        self.parameters = self.manager.GetParameters()
+        self.status.config(text="Parameters loaded")
+      if load_scenario:
+        self.manager.LoadScenarioFromJSON(path)
+        self.scenario = self.manager.GetScenario()
+        self.status.config(text="Scenario loaded")
+      if self.parameters and self.scenario:
+        self._run_simulation()
     except Exception as e:
       messagebox.showerror("Error", str(e))
 
+  def _load_both(self):
+    self._ask_and_load(load_params=True, load_scenario=True)
+
+  def _load_parameters_only(self):
+    self._ask_and_load(load_params=True)
+
+  def _load_scenario_only(self):
+    self._ask_and_load(load_scenario=True)
+
+
+  def _handle_set(self, choice):
+    match choice:
+      case "Set parameters":
+        self._set_parameters()
+      case "Set scenario":
+        self._set_scenario()
+
+  def _create_popup(self, title):
+    win = tk.Toplevel(self)
+    win.geometry(f"+{self.winfo_rootx()}+{self.winfo_rooty()}")
+    win.title(title)
+    win.transient(self)
+    win.grab_set()
+    win.focus_set()
+    return win
+
+
+  def _set_parameters(self):
+    if self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "Reset the simulation first")
+      return
+    win = self._create_popup("Set Parameters")
+
+    entries = {}
+    fields = [
+      ("Sensor radius", "sensor_radious"),
+      ("Battery level", "initial_battery_lvl"),
+      ("Reshuffle interval", "reshuffle_interval"),
+      ("Stop threshold", "stop_threshold"),
+      ("Max ticks", "max_ticks")
+    ]
+    for i, (label, key) in enumerate(fields):
+      tk.Label(win, text=label).grid(row=i, column=0, sticky="w")
+      entry = tk.Entry(win)
+      entry.grid(row=i, column=1)
+      entries[key] = entry
+
+    stop_conditions = {
+      "Manual": "kManual",
+      "Zero coverage": "kZeroCoverage",
+      "Coverage below threshold": "kCoverageBelowThreshold",
+      "Any coverage lost": "kAnyCoverageLost"
+    }
+    tk.Label(win, text="Stop condition").grid(row=len(fields), column=0, sticky="w")
+    stop_var = tk.StringVar(value="Manual")
+    option_menu = tk.OptionMenu(win, stop_var, *stop_conditions.keys())
+    option_menu.config(width=25)
+    option_menu.grid(row=len(fields), column=1)
+
+    def apply():
+      try:
+        enum_name = stop_conditions[stop_var.get()]
+        stop_enum = getattr(backend.SimulationStopCondition, enum_name)
+        params = backend.SimulationParameters(
+          float(entries["sensor_radious"].get()),
+          int(entries["initial_battery_lvl"].get()),
+          int(entries["reshuffle_interval"].get()),
+          stop_enum,
+          float(entries["stop_threshold"].get()),
+          int(entries["max_ticks"].get())
+        )
+        self.manager.SetParameters(params)
+        self.parameters = self.manager.GetParameters()
+        win.destroy()
+        self.status.config(text="Parameters loaded")
+        if self.scenario:
+          self._run_simulation()
+      except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+    tk.Button(win, text="Apply", command=apply).grid(row=len(fields)+1, columnspan=2, pady=5)
+
+
+
+  def _set_scenario(self):
+    if self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "Reset the simulation first")
+      return
+    win = self._create_popup("Set Scenario")
+
+    tk.Label(win, text="Target positions (x,y;...)").grid(row=0, column=0, sticky="w")
+    target_entry = tk.Entry(win, width=60)
+    target_entry.grid(row=0, column=1)
+
+    tk.Label(win, text="Sensor positions (x,y;...)").grid(row=1, column=0, sticky="w")
+    sensor_entry = tk.Entry(win, width=60)
+    sensor_entry.grid(row=1, column=1)
+
+    def parse_points(text):
+      pts = []
+      for pair in text.split(";"):
+        x, y = map(float, pair.strip().split(","))
+        pts.append(backend.Point(x, y))
+      return pts
+    def apply():
+      try:
+        targets = parse_points(target_entry.get())
+        sensors = parse_points(sensor_entry.get())
+        scen = backend.SimulationScenario(targets, sensors)
+        self.manager.SetScenario(scen)
+        self.scenario = self.manager.GetScenario()
+        win.destroy()
+        self.status.config(text="Scenario loaded")
+        if self.parameters:
+          self._run_simulation()
+      except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+    tk.Button(win, text="Apply", command=apply).grid(row=2, columnspan=2, pady=5)
+
+ 
+  def _save_report(self):
+    if not self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "No simulation to save")
+      return
+    if not self.final_state:
+      messagebox.showwarning("Warning", "No simulation data to save")
+      return
+    path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                      filetypes=[("Text file", "*.txt")])
+    if not path: return
+    try:
+      s = self.final_state
+      with open(path, "w") as f:
+        f.write("=== WSN Simulation Report ===\n\n")
+
+        f.write(f"Total ticks: {s.tick}\n")
+        f.write(f"Sensor count: {len(s.sensor_states)}\n")
+        f.write(f"Target count: {len(s.is_target_covered)}\n")
+        f.write(f"Final coverage: {s.coverage_percentage:.2f}% "
+                f"({s.covered_target_count}/{len(s.is_target_covered)})\n\n")
+              
+        f.write("\nSimulation Parameters:\n")
+        f.write(f"  Radius: {self.parameters.sensor_radious}\n") # type: ignore
+        f.write(f"  Battery: {self.parameters.initial_battery_lvl}\n") # type: ignore
+        f.write(f"  Reshuffle Interval: {self.parameters.reshuffle_interval}\n") # type: ignore
+        
+        f.write("Sensor states:\n")
+        for i, st in enumerate(s.sensor_states):
+          f.write(f"  Sensor {i}: {st.name}, Battery: {s.sensor_battery_lvls[i]}\n")
+
+      messagebox.showinfo("Saved", f"Report saved to {path}")
+    except Exception as e:
+      messagebox.showerror("Error", str(e))
+
+  def _reset(self):
+    if not self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "No simulation to reset")
+      return
+    self._stop_auto()
+    self.manager.Reset()
+    self.parameters = None
+    self.scenario = None
+    self.states = []
+    self.current_idx = 0
+    self.final_state = None
+
+    blank_img = Image.new("RGB", (self.canvas_size, self.canvas_size), (255, 255, 255))
+    self.tk_img = ImageTk.PhotoImage(blank_img)
+    self.canvas.create_image(0, 0, anchor="nw", image=self.tk_img)
+
+    self.status.config(text="No simulation loaded")
+
   def _draw_state(self, state):
     size = self.canvas_size
-    # prepare empty layers
     base = Image.new("RGBA", (size, size), (255,255,255,0))
     range_layer = base.copy()
     outline_layer = base.copy()
@@ -121,22 +342,17 @@ class Interface(tk.Tk):
     draw_sensor = ImageDraw.Draw(sensor_layer)
     draw_target = ImageDraw.Draw(target_layer)
 
-    scen = self.manager.GetScenario()
-    params = self.manager.GetParameters()
-
     for i, s_state in enumerate(state.sensor_states):
       if s_state == backend.SensorState.kOn:
-        pt = scen.sensor_positions[i]
+        pt = self.scenario.sensor_positions[i] # type: ignore
         x = int(pt.x * size)
         y = int(pt.y * size)
-        R = int(params.sensor_radious * size)
-        # semi-transparent fill
+        R = int(self.parameters.sensor_radious * size) # type: ignore
         draw_range.ellipse((x-R, y-R, x+R, y+R), fill=(192, 255, 192, 64))
-        # outline
         draw_outline.ellipse((x-R, y-R, x+R, y+R), outline=(16, 192, 128, 128), width=2)
 
     for i, s_state in enumerate(state.sensor_states):
-      pt = scen.sensor_positions[i]
+      pt = self.scenario.sensor_positions[i] # type: ignore
       x = int(pt.x * size)
       y = int(pt.y * size)
       if s_state == backend.SensorState.kOn:
@@ -148,13 +364,12 @@ class Interface(tk.Tk):
       draw_sensor.ellipse((x-3, y-3, x+3, y+3), fill=color)
 
     for j, covered in enumerate(state.is_target_covered):
-      pt = scen.target_positions[j]
+      pt = self.scenario.target_positions[j] # type: ignore
       x = int(pt.x * size)
       y = int(pt.y * size)
       color = (0,0,0) if covered else (150,150,150)
       draw_target.rectangle((x-2, y-2, x+2, y+2), fill=color)
 
-    # composite: base->range->outline->sensor->target
     img = Image.alpha_composite(base, range_layer)
     img = Image.alpha_composite(img, outline_layer)
     img = Image.alpha_composite(img, sensor_layer)
@@ -163,7 +378,9 @@ class Interface(tk.Tk):
     self.tk_img = ImageTk.PhotoImage(img.convert("RGB"))
     self.canvas.create_image(0, 0, anchor="nw", image=self.tk_img)
 
-    self.status.config(text=f"Tick: {state.tick} / {len(self.states)-1}")
+    tick_info = f"Tick: {state.tick} / {len(self.states)-1}"
+    coverage_info = f"  Coverage: {state.coverage_percentage:.1f}% ({state.covered_target_count}/{len(state.is_target_covered)})"
+    self.status.config(text=tick_info + coverage_info)
 
   def run(self):
     self.mainloop()

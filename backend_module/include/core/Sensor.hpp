@@ -7,28 +7,10 @@
 #include <algorithm>
 
 #include "shared/utility.hpp"
+#include "core/Entity.hpp"
+#include "core/Target.hpp"
+#include "core/utility.hpp"
 #include "core/cover_structures.hpp"
-
-class Entity
-{
-protected:
-  Point position_;
-
-public:
-  explicit Entity(Point position) : position_(position) {}
-  Point GetPosition() const { return position_; }
-};
-
-class Target : public Entity, public Id<Target>
-{
-  bool covered_flag_;
-
-public:
-  explicit Target(Point position) : Entity(position), Id<Target>(), covered_flag_(false) {}
-  Target(const Target &other) = default;
-  void SetCoverFlag(bool flag) { covered_flag_ = flag; }
-  bool GetCoverFlag() const { return covered_flag_; }
-};
 
 class Sensor : public Entity, public Id<Sensor>
 {

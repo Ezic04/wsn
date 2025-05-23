@@ -8,7 +8,6 @@
 
 using json = nlohmann::json;
 
-
 enum class SimulationStopCondition
 {
   kManual,
@@ -86,38 +85,31 @@ struct SimulationState
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Point, x, y)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationParameters, sensor_radious, initial_battery_lvl, reshuffle_interval, max_ticks, stop_condition, stop_threshold)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationScenario, sensor_positions, target_positions)
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationState, tick, all_target_covered, covered_target_count, is_target_covered, sensor_states, sensor_battery_lvls)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+    SimulationState,
+    tick,
+    all_target_covered,
+    covered_target_count,
+    coverage_percentage,
+    is_target_covered,
+    sensor_states,
+    sensor_battery_lvls)
 
-inline void to_json(nlohmann::json &j, const SimulationStopCondition &cond)
-{
-  switch (cond)
-  {
-  case SimulationStopCondition::kManual:
-    j = "kManual";
-    break;
-  case SimulationStopCondition::kZeroCoverage:
-    j = "kZeroCoverage";
-    break;
-  case SimulationStopCondition::kCoverageBelowThreshold:
-    j = "kCoverageBelowThreshold";
-    break;
-  case SimulationStopCondition::kAnyCoverageLost:
-    j = "kAnyCoverageLost";
-    break;
-  }
-}
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    Sensor::State,
+    {
+        {Sensor::State::kOn, "kOn"},
+        {Sensor::State::kOff, "kOff"},
+        {Sensor::State::kDead, "kDead"},
+        {Sensor::State::kUndecided, "kUndecided"},
+    })
 
-inline void from_json(const nlohmann::json &j, SimulationStopCondition &cond)
-{
-  const std::string s = j.get<std::string>();
-  if (s == "kManual")
-    cond = SimulationStopCondition::kManual;
-  else if (s == "kZeroCoverage")
-    cond = SimulationStopCondition::kZeroCoverage;
-  else if (s == "kCoverageBelowThreshold")
-    cond = SimulationStopCondition::kCoverageBelowThreshold;
-  else if (s == "kAnyCoverageLost")
-    cond = SimulationStopCondition::kAnyCoverageLost;
-  else
-    throw std::invalid_argument("Invalid stop_condition value: " + s);
-}
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    SimulationStopCondition,
+    {
+        {SimulationStopCondition::kManual, "kManual"},
+        {SimulationStopCondition::kZeroCoverage, "kZeroCoverage"},
+        {SimulationStopCondition::kCoverageBelowThreshold, "kCoverageBelowThreshold"},
+        {SimulationStopCondition::kAnyCoverageLost, "kAnyCoverageLost"},
+    })
+

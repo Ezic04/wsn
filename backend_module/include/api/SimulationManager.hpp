@@ -4,7 +4,7 @@
 #include <optional>
 #include "core/Simulation.hpp"
 #include "shared/utility.hpp"
-#include "shared/data_structures.hpp"
+#include "shared/simulation_structures.hpp"
 #include "api/json.hpp"
 
 class SimulationManager
@@ -13,20 +13,24 @@ class SimulationManager
   std::optional<SimulationScenario> scenario_;
   std::optional<Simulation> simulation_;
   std::vector<SimulationState> states_;
+  bool is_initialized_ = false;
 
 public:
-  // void SetStopCondition(SimulationStopCondition condition, float threshold = 0.9f);
-  const std::vector<SimulationState> &GetSimulationStates() const { return states_; }
   const SimulationParameters &GetParameters() const;
   const SimulationScenario &GetScenario() const;
-  void LoadFromJSON(const std::string &json_path);
-  void LoadParameters(const SimulationParameters &paramseters);
-  void LoadScenario(const SimulationScenario &scenario);
-  void LoadRandomScenario(uint32_t target_num, uint32_t sensor_num);
+  const std::vector<SimulationState> &GetSimulationStates() const { return states_; }
+  bool IsInitialized() const { return is_initialized_; }
+  void SetParameters(const SimulationParameters &paramseters);
+  void SetScenario(const SimulationScenario &scenario);
+  void LoadParametersFromJSON(const std::string &json_path);
+  void LoadScenarioFromJSON(const std::string &json_path);
+  // void DumpStatesToJSON(const std::string& json_path) const;
+  // void LoadRandomScenario(uint32_t target_num, uint32_t sensor_num);
   void Initialize();
   void Run();
   void Reset();
 
 private:
-  bool ShouldStop(SimulationState state);
+  json LoadJSON(const std::string &json_path);
+  bool ShouldStop(const SimulationState &state);
 };

@@ -52,7 +52,6 @@ def add_package_path_to_venv(package_path):
         line_to_add = f'export PYTHONPATH="$PYTHONPATH:{package_path}"\n'
     else:
         raise OSError("Unsupported operating system.")
-
     # adding path to activate file
     with open(activate_path, 'a') as file:
         file.write(line_to_add)
@@ -100,7 +99,6 @@ def configure_cmake():
 def build_project():
     print("Building project...")
     subprocess.run(["cmake", "--build", str(cmake_backend_build_dir), "--config", "Release", "--target", "install"], check=True)
-        # Build the test executable
     subprocess.run([
         "cmake", "--build", str(cmake_backend_build_dir),
         "--config", "Release", "--target", "cpp_test"
@@ -111,36 +109,28 @@ def init_package():
     if not backend_module_dir.exists():
         print("backend_module directory not found")
         sys.exit(-1)
-
-    # Ensure __init__.py exists
     init_file = backend_module_dir / "__init__.py"
     if not init_file.exists():
         print("Creating __init__.py in backend_package...")
         init_file.touch()
     else:
         print("__init__.py already exists. Skipped.")
-
-    # Add backend_package to sys.path
     package_path = str(backend_module_dir.resolve())
     if package_path not in sys.path:
         sys.path.insert(0, package_path)
         print(f"Added {package_path} to sys.path")
-        
-
 
 def generate_pyi():
     python_path = Path(".venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     module_name = "backend_module"
     output_dir = backend_module_dir
     sys.path.append(str(backend_module_dir))
-
     print(f"Generating .pyi file for {module_name}...")
     subprocess.run([ 
         str(python_path), "-m", "pybind11_stubgen",
         "--output", str(output_dir),
         module_name
     ], check=True, cwd=str(backend_module_dir))
-
     print(f".pyi file should be in {output_dir}")
 
 def main():

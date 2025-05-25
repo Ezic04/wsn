@@ -17,7 +17,7 @@ class Interface(tk.Tk):
     self.ctrl = tk.Frame(self)
     self.ctrl.pack(fill="x", padx=10, pady=5)
 
-    # Left group: Load, Set, Save, Reset
+    # Left group: Load, Set, Run, Save, Reset
     left_group = tk.Frame(self.ctrl)
     left_group.pack(side="left")
 
@@ -26,9 +26,9 @@ class Interface(tk.Tk):
     load_btn.pack(side="left", padx=5)
     load_menu = tk.Menu(load_btn, tearoff=0)
     load_btn.config(menu=load_menu)
-    load_menu.add_command(label="Load both", command=self._load_both)
     load_menu.add_command(label="Load parameters", command=self._load_parameters_only)
     load_menu.add_command(label="Load scenario", command=self._load_scenario_only)
+    load_menu.add_command(label="Load both", command=self._load_both)
   
     # Set button with menu
     set_btn = tk.Menubutton(left_group, text="Set", relief="raised")
@@ -38,22 +38,24 @@ class Interface(tk.Tk):
     set_menu.add_command(label="Set parameters", command=self._set_parameters)
     set_menu.add_command(label="Set scenario", command=self._set_scenario)
 
-    # Save and Reset buttons
+    # Run, Save and Reset buttons
+    tk.Button(left_group, text="Run Simulation", command=self._run_simulation).pack(side="left", padx=5)
     tk.Button(left_group, text="Save Report…", command=self._save_report).pack(side="left", padx=5)
     tk.Button(left_group, text="Reset", command=self._reset).pack(side="left", padx=5)
 
-    # Right group: Step, Auto, Delay
+    # Right group: Auto, Manual, Replay, Delay
     right_group = tk.Frame(self.ctrl)
     right_group.pack(side="right")
 
-    # Manual Step and Auto buttons
-    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
     self.auto_btn = tk.Button(right_group, text="Auto ▶▶", command=self._toggle_auto)
-    self.auto_btn.pack(side="left")
+    self.auto_btn.pack(side="left", padx=5)
+    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
+    tk.Button(right_group, text="Replay ⟲", command=self._replay).pack(side="left", padx=5)
+    
     tk.Label(right_group, text="Delay(ms):").pack(side="left", padx=(20, 0))
     self.delay_var = tk.IntVar(value=100)
     tk.Spinbox(right_group, from_=20, to=2000, increment=20,
-               textvariable=self.delay_var, width=5).pack(side="left")
+           textvariable=self.delay_var, width=5).pack(side="left")
 
     # Canvas and status
     self.canvas_size = min(win_width - 100, win_height - 100)
@@ -106,15 +108,40 @@ class Interface(tk.Tk):
     if self.current_idx < len(self.states) - 1:
       self.current_idx += 1
       self._draw_state(self.states[self.current_idx])
+  
+  def _replay(self):
+    """Reset playback to the first state."""
+    if not self.states:
+        return
+    self._stop_auto()
+    self.current_idx = 0
+    self._draw_state(self.states[0])
+    tick_info = f"Tick: 0 / {len(self.states)-1}"
+    if hasattr(self.states[0], 'coverage_percentage') and hasattr(self.states[0], 'covered_target_count'):
+        coverage_info = f"  Coverage: {self.states[0].coverage_percentage:.1f}% ({self.states[0].covered_target_count}/{len(self.states[0].is_target_covered)})"
+        self.status.config(text=tick_info + coverage_info)
+    else:
+        self.status.config(text=tick_info)
 
   def _run_simulation(self):
     if not self.parameters or not self.scenario:
       messagebox.showwarning("Missing data", "Set both parameters and scenario first.")
       return
+    if self.manager.IsInitialized():
+      messagebox.showwarning("Warning", "Reset the simulation first")
+      return
     try:
       self._stop_auto()
+      # Initializing the simulation
+      self.status.config(text="Initializing simulation...")
+      self.config(cursor="watch") 
+      self.update_idletasks()
       self.manager.Initialize()
+      # Running the simulation
+      self.status.config(text="Running simulation...")
+      self.update_idletasks()
       self.manager.Run()
+      self.config(cursor="")
       self.states = list(self.manager.GetSimulationStates())
       if not self.states:
         messagebox.showwarning("Warning", "No states generated")
@@ -152,8 +179,10 @@ class Interface(tk.Tk):
         self.manager.LoadScenarioFromJSON(path)
         self.scenario = self.manager.GetScenario()
         self.status.config(text="Scenario loaded")
-      if self.parameters and self.scenario:
-        self._run_simulation()
+      if load_params and load_scenario:
+        self.status.config(text="Parameters and scenario loaded")
+      # if self.parameters and self.scenario:
+      #   self._run_simulation()
     except Exception as e:
       messagebox.showerror("Error", str(e))
 
@@ -232,8 +261,6 @@ class Interface(tk.Tk):
         self.parameters = self.manager.GetParameters()
         win.destroy()
         self.status.config(text="Parameters loaded")
-        if self.scenario:
-          self._run_simulation()
       except Exception as e:
         messagebox.showerror("Error", str(e))
 
@@ -270,8 +297,6 @@ class Interface(tk.Tk):
         self.scenario = self.manager.GetScenario()
         win.destroy()
         self.status.config(text="Scenario loaded")
-        if self.parameters:
-          self._run_simulation()
       except Exception as e:
         messagebox.showerror("Error", str(e))
 
@@ -296,7 +321,7 @@ class Interface(tk.Tk):
         f.write(f"Total ticks: {s.tick}\n")
         f.write(f"Sensor count: {len(s.sensor_states)}\n")
         f.write(f"Target count: {len(s.is_target_covered)}\n")
-        f.write(f"Final coverage: {s.coverage_percentage:.2f}% "
+        f.write(f"Final coverage: { 100 * s.coverage_percentage:.2f}% "
                 f"({s.covered_target_count}/{len(s.is_target_covered)})\n\n")
               
         f.write("\nSimulation Parameters:\n")
@@ -348,8 +373,8 @@ class Interface(tk.Tk):
         x = int(pt.x * size)
         y = int(pt.y * size)
         R = int(self.parameters.sensor_radious * size) # type: ignore
-        draw_range.ellipse((x-R, y-R, x+R, y+R), fill=(192, 255, 192, 64))
-        draw_outline.ellipse((x-R, y-R, x+R, y+R), outline=(16, 192, 128, 128), width=2)
+        draw_range.ellipse((x-R, y-R, x+R, y+R), fill=(243, 255, 243, 32))
+        draw_outline.ellipse((x-R, y-R, x+R, y+R), outline=(96, 224, 128, 128), width=2)
 
     for i, s_state in enumerate(state.sensor_states):
       pt = self.scenario.sensor_positions[i] # type: ignore
@@ -358,17 +383,19 @@ class Interface(tk.Tk):
       if s_state == backend.SensorState.kOn:
         color = (0,150,0)
       elif s_state == backend.SensorState.kOff:
-        color = (100,100,100)
-      else:
+        color = (150,150,150)
+      elif s_state == backend.SensorState.kDead:
         color = (200,0,0)
+      else:
+        color = (180,180,0)
       draw_sensor.ellipse((x-3, y-3, x+3, y+3), fill=color)
 
     for j, covered in enumerate(state.is_target_covered):
       pt = self.scenario.target_positions[j] # type: ignore
       x = int(pt.x * size)
       y = int(pt.y * size)
-      color = (0,0,0) if covered else (150,150,150)
-      draw_target.rectangle((x-2, y-2, x+2, y+2), fill=color)
+      color = (70,70,200) if covered else (220,170,50)
+      draw_target.rectangle((x-3, y-3, x+3, y+3), fill=color)
 
     img = Image.alpha_composite(base, range_layer)
     img = Image.alpha_composite(img, outline_layer)
@@ -379,7 +406,7 @@ class Interface(tk.Tk):
     self.canvas.create_image(0, 0, anchor="nw", image=self.tk_img)
 
     tick_info = f"Tick: {state.tick} / {len(self.states)-1}"
-    coverage_info = f"  Coverage: {state.coverage_percentage:.1f}% ({state.covered_target_count}/{len(state.is_target_covered)})"
+    coverage_info = f"  Coverage: { 100 * state.coverage_percentage:.1f}% ({state.covered_target_count}/{len(state.is_target_covered)})"
     self.status.config(text=tick_info + coverage_info)
 
   def run(self):

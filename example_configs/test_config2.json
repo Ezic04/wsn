@@ -1,0 +1,28 @@
+{
+  "parameters": {
+    "sensor_radious": 0.31,
+    "initial_battery_lvl": 24,
+    "reshuffle_interval": 8,
+    "max_ticks": 1024,
+    "stop_condition": "kZeroCoverage",
+    "stop_threshold": 0.0
+  },
+  "scenario": {
+    "sensor_positions": [
+      { "x": 0.4, "y": 0.4 },
+      { "x": 0.6, "y": 0.4 },
+      { "x": 0.6, "y": 0.6 },
+      { "x": 0.4, "y": 0.6 },
+      
+      { "x": 0.5, "y": 0.4 },
+      { "x": 0.4, "y": 0.5 },
+      { "x": 0.5, "y": 0.6 },
+      { "x": 0.6, "y": 0.5 }
+
+    ],
+    "target_positions": [
+      { "x": 0.5, "y": 0.5 },
+      { "x": 0.5, "y": 0.3 }
+    ]
+  }
+}

@@ -28,5 +28,4 @@ private:
   void InitializeCoverData();
   void GenerateLDGraph();
   void GenetateCoverData();
-  void f();
 };

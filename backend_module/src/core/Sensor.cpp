@@ -64,27 +64,41 @@ void Sensor::Initialize()
   }
   if (bit_vec_size < target_num)
   {
-    std::string msg = std::format("more than {} targets for: {} ({},{})", bit_vec_size-1, this->GetId(), position_.x, position_.y);
+    std::string msg = std::format("more than {} targets for: {} ({},{})", bit_vec_size - 1, this->GetId(), position_.x, position_.y);
     throw std::runtime_error(msg);
   }
   if (bit_vec_size < sensor_num)
   {
-    std::string msg = std::format("more than {} sensors for: {} ({},{})", bit_vec_size-1, this->GetId(), position_.x, position_.y);
+    std::string msg = std::format("more than {} sensors for: {} ({},{})", bit_vec_size - 1, this->GetId(), position_.x, position_.y);
     throw std::runtime_error(msg);
   }
   std::vector<Sensor *> all_sensors = local_sensors_;
   all_sensors.emplace_back(this);
-  std::tie(covers_, local_graph_) = LDGraphGenerator{all_sensors, local_targets_}();
+  std::vector<Target *> all_targets;
+  std::unordered_set<Target *> unique_targets;
+  for (auto *t : local_targets_)
+  {
+    unique_targets.insert(t);
+  }
+  // for (auto *s : local_sensors_) //optional. doesnt work at all
+  // {
+  //   for (auto *t : s->GetLocalTargets())
+  //   {
+  //     unique_targets.insert(t);
+  //   }
+  // }
+  all_targets.assign(unique_targets.begin(), unique_targets.end());
+  std::tie(covers_, local_graph_) = LDGraphGenerator{all_sensors, all_targets}();
 
   // printing
   std::cout << "=== Sensor Id: " << GetId() << " ===";
   std::cout << "\nT: ";
-  for (auto &i : local_targets_)
+  for (auto *i : all_targets)
   {
     std::cout << i->GetId() << ", ";
   }
   std::cout << "\nS: ";
-  for (auto &i : local_sensors_)
+  for (auto *i : all_sensors)
   {
     std::cout << i->GetId() << ", ";
   }
@@ -110,32 +124,68 @@ void Sensor::Update()
   }
 }
 
+// void Sensor::UpdateCoverData()
+// {
+//   for (Cover &cover : covers_)
+//   {
+//     cover.lifetime = std::numeric_limits<uint16_t>::max();
+//     cover.remaining_to_on = cover.sensors.size();
+//     cover.feasible = true;
+//     for (Sensor *sensor : cover.sensors)
+//     {
+//       cover.lifetime = std::min(cover.lifetime, sensor->battery_lvl_);
+//       switch (sensor->GetState())
+//       {
+//       case State::kOn:
+//         --cover.remaining_to_on;
+//         break;
+//       case State::kOff:
+//       case State::kDead:
+//         cover.feasible = false;
+//       default:
+//         break;
+//       }
+//     }
+//   }
+//   std::sort(covers_.begin(), covers_.end());
+// }
+
 void Sensor::UpdateCoverData()
 {
-  for (size_t i = 0; i < covers_.size(); ++i)
+  bool does_changed = false;
+  for (Cover &cover : covers_)
   {
-    Cover &cover = covers_[i];
-    cover.lifetime = std::numeric_limits<uint16_t>::max();
-    cover.remaining_to_on = cover.sensors.size();
-    for (const Sensor *sensor : cover.sensors)
+    auto lifetime = std::numeric_limits<uint16_t>::max();
+    auto remaining_to_on = cover.sensors.size();
+    auto feasible = true;
+    for (Sensor *sensor : cover.sensors)
     {
-      cover.lifetime = std::min(cover.lifetime, sensor->battery_lvl_);
-      cover.feasible = true;
+      lifetime = std::min(lifetime, sensor->battery_lvl_);
       switch (sensor->GetState())
       {
       case State::kOn:
-        --cover.remaining_to_on;
+        --remaining_to_on;
         break;
-      case State::kDead:
       case State::kOff:
-        cover.feasible = false;
-        break;
+      case State::kDead:
+        feasible = false;
       default:
         break;
       }
     }
+    if (lifetime != cover.lifetime || remaining_to_on != cover.remaining_to_on || feasible != cover.feasible)
+    {
+      does_changed = true;
+      current_cover_idx = 0; // important
+      cover.lifetime = lifetime;
+      cover.remaining_to_on = remaining_to_on;
+      cover.feasible = feasible;
+    }
   }
-  std::sort(covers_.begin(), covers_.end());
+  if (does_changed)
+  {
+    std::sort(covers_.begin(), covers_.end());
+  }
 }
 
 void Sensor::BeginReshuffle()
@@ -145,6 +195,7 @@ void Sensor::BeginReshuffle()
     return;
   }
   state_ = State::kUndecided;
+  current_cover_idx = 0;
 }
 
 bool Sensor::Reshuffle()
@@ -153,45 +204,40 @@ bool Sensor::Reshuffle()
   {
     return true;
   }
-  
   UpdateCoverData();
-  uint32_t current_cover_index_ = 0;
-  while (!covers_[current_cover_index_].feasible)
-  {
-    ++current_cover_index_;
-    if (current_cover_index_ == covers_.size())
-    {
-      throw std::runtime_error("cover index error");
-    }
-  }
-  Cover &current_cover_ = covers_[current_cover_index_];
-
-  if (GetId() == current_cover_.min_id && current_cover_.Contains(this))
+  current_cover_ = &covers_[current_cover_idx % covers_.size()];
+  if (GetId() == current_cover_->min_id && current_cover_->Contains(this))
   {
     state_ = State::kOn;
     return true;
   }
-
-  bool cover_satisfied = true;
+  bool next_index = false;
+  bool satisfied = true;
   for (auto *s : local_sensors_)
   {
     if (s == this)
     {
       continue;
     }
-    bool contains = current_cover_.Contains(s);
+    bool contains = current_cover_->Contains(s);
     State state = s->GetState();
     if (contains && state != State::kOn)
     {
-      cover_satisfied = false;
+      satisfied = false;
+    }
+    if (!contains && state != State::kOff)
+    {
+      next_index = true;
     }
   }
-
-  if (cover_satisfied)
+  if (satisfied)
   {
-    state_ = current_cover_.Contains(this) ? State::kOn : State::kOff;
+    state_ = current_cover_->Contains(this) ? State::kOn : State::kOff;
     return true;
   }
-  
+  if (next_index)
+  {
+    ++current_cover_idx;
+  }
   return false;
 }

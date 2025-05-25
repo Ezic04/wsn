@@ -4,7 +4,9 @@
 // #define DEBUG
 #define RD 0
 
-auto draw_battery = [](int max, int lvl) -> void
+
+
+void DrawBattery(int max, int lvl)
 {
   int max_segments = 32;
   double percentage = (static_cast<double>(lvl) / max) * 100.0;
@@ -23,9 +25,13 @@ void Simulation::Initialize(const SimulationParameters &parameters, const Simula
   reshuffle_interval_ = parameters.reshuffle_interval;
   Sensor::SetRadius(parameters.sensor_radious);
   PlaceAtPositions(scenario.target_positions, scenario.sensor_positions);
-  SortByPositions();
-  DetermineNeighborhoods();
+
+  std::vector<size_t> sensors_idx;
+  std::vector<size_t> target_idx;
+  SortByPositions(target_idx, sensors_idx);
+  DetermineNeighborhoods(target_idx, sensors_idx);
   SortById();
+
   for (auto &sensor : sensors_)
   {
     sensor.Initialize();
@@ -48,7 +54,7 @@ SimulationState Simulation::GetSimulationState()
   state.is_target_covered = CountCover();
   state.all_target_covered = all_target_covered_;
   state.covered_target_count = covered_tragets_count_;
-  state.coverage_percentage = 100.f * covered_tragets_count_ / target_num;
+  state.coverage_percentage = covered_tragets_count_ / target_num;
   return state;
 }
 
@@ -68,18 +74,26 @@ void Simulation::PlaceAtPositions(const std::vector<Point> &target_positions, co
   }
 }
 
-void Simulation::SortByPositions()
+void Simulation::SortByPositions(std::vector<size_t> &targets_idx, std::vector<size_t> &sensors_idx)
 {
+  targets_idx.resize(target_num);
+  sensors_idx.resize(sensor_num);
+  std::iota(targets_idx.begin(), targets_idx.end(), 0);
+  std::iota(sensors_idx.begin(), sensors_idx.end(), 0);
   auto point_compare = [](const Point &p1, const Point &p2) -> bool
   {
     return std::fabs(p1.x - p2.x) < std::numeric_limits<double>::epsilon() ? p1.y < p2.y : p1.x < p2.x;
   };
-  auto entity_compare = [&point_compare](const Entity &s1, const Entity &s2) -> bool
+  auto target_compare = [&](size_t i1, size_t i2) -> bool
   {
-    return point_compare(s1.GetPosition(), s2.GetPosition());
+    return point_compare(targets_[i1].GetPosition(), targets_[i2].GetPosition());
   };
-  std::sort(targets_.begin(), targets_.end(), entity_compare);
-  std::sort(sensors_.begin(), sensors_.end(), entity_compare);
+  auto sensor_compare = [&](size_t i1, size_t i2) -> bool
+  {
+    return point_compare(sensors_[i1].GetPosition(), sensors_[i2].GetPosition());
+  };
+  std::sort(targets_idx.begin(), targets_idx.end(), target_compare);
+  std::sort(sensors_idx.begin(), sensors_idx.end(), sensor_compare);
 }
 
 void Simulation::SortById()
@@ -88,42 +102,42 @@ void Simulation::SortById()
   std::sort(sensors_.begin(), sensors_.end());
 }
 
-void Simulation::DetermineNeighborhoods()
+void Simulation::DetermineNeighborhoods(std::vector<size_t> &targets_idx, std::vector<size_t> &sensors_idx)
 {
   double R = Sensor::GetRadius();
-  for (auto s = sensors_.begin(); s != sensors_.end(); ++s)
+  for (size_t idx_t : targets_idx)
   {
-    auto it = s + 1;
-    if (it == sensors_.end())
+    const Point &t_pos = targets_[idx_t].GetPosition();
+    for (size_t idx_s : sensors_idx)
     {
-      break;
-    }
-    Point s_pos = s->GetPosition();
-    Point it_pos = it->GetPosition();
-    while (it != sensors_.end() && it_pos.x < s_pos.x + R)
-    {
-      it_pos = it->GetPosition();
-      if (Sqr(s_pos.x - it_pos.x) + Sqr(s_pos.y - it_pos.y) < Sqr(R))
-      {
-        s->AddLocalSensor(*it);
-        it->AddLocalSensor(*s);
-      }
-      ++it;
-    }
-  }
-  for (auto t = targets_.begin(); t != targets_.end(); ++t)
-  {
-    auto s = sensors_.begin();
-    Point t_pos = t->GetPosition();
-    Point s_pos = s->GetPosition();
-    while (s != sensors_.end() && s_pos.x < t_pos.x + R)
-    {
-      s_pos = s->GetPosition();
+      const Point &s_pos = sensors_[idx_s].GetPosition();
+      if (s_pos.x >= t_pos.x + R)
+        break;
+
       if (Sqr(s_pos.x - t_pos.x) + Sqr(s_pos.y - t_pos.y) < Sqr(R))
       {
-        s->AddLocalTarget(*t);
+        sensors_[idx_s].AddLocalTarget(targets_[idx_t]);
       }
-      ++s;
+    }
+  }
+  for (size_t idx1 = 0; idx1 < sensors_idx.size(); ++idx1)
+  {
+    size_t i = sensors_idx[idx1];
+    const Point &pos_i = sensors_[i].GetPosition();
+
+    for (size_t idx2 = idx1 + 1; idx2 < sensors_idx.size(); ++idx2)
+    {
+      size_t j = sensors_idx[idx2];
+      const Point &pos_j = sensors_[j].GetPosition();
+
+      if (pos_j.x >= pos_i.x + R)
+        break;
+
+      if (Sqr(pos_i.x - pos_j.x) + Sqr(pos_i.y - pos_j.y) < Sqr(R))
+      {
+        sensors_[i].AddLocalSensor(sensors_[j]);
+        sensors_[j].AddLocalSensor(sensors_[i]);
+      }
     }
   }
 }
@@ -143,14 +157,26 @@ void Simulation::Tick()
       sensor.BeginReshuffle();
     }
   }
-  while (reshuffle_active)
+  uint32_t counter = 0;
+  while (reshuffle_active && counter != 0xfff)
   {
+    ++counter;
     reshuffle_active = false;
     for (auto &sensor : sensors_)
     {
       if (!sensor.Reshuffle())
       {
         reshuffle_active = true;
+      }
+    }
+  }
+  if (counter == 0xfff) // in case of infinite loop
+  {
+    for (auto &sensor : sensors_)
+    {
+      if (sensor.GetState() == Sensor::State::kUndecided)
+      {
+        sensor.SetState(Sensor::State::kOn);
       }
     }
   }
@@ -180,7 +206,7 @@ std::vector<bool> Simulation::CountCover()
   all_target_covered_ = covered_tragets_count_ == targets_.size();
   if (tick_ % reshuffle_interval_ == 0) // debug
   {
-    draw_battery(targets_.size(), covered_tragets_count_);
+    DrawBattery(targets_.size(), covered_tragets_count_);
   }
   return is_target_covered;
 }

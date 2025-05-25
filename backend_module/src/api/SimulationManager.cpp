@@ -22,9 +22,9 @@ const SimulationScenario &SimulationManager::GetScenario() const
 
 void SimulationManager::SetParameters(const SimulationParameters &parameters)
 {
-  if (parameters_.has_value())
+  if (parameters_.has_value() && is_initialized_)
   {
-    throw std::runtime_error("Parameters already set");
+    throw std::runtime_error("Cannot set parameters after initialization");
   }
   if(parameters.sensor_radious <= 0)
   {
@@ -47,9 +47,9 @@ void SimulationManager::SetParameters(const SimulationParameters &parameters)
 
 void SimulationManager::SetScenario(const SimulationScenario &scenario)
 {
-  if (scenario_.has_value())
+  if (scenario_.has_value() && is_initialized_)
   {
-    throw std::runtime_error("Scenario already set");
+    throw std::runtime_error("Cannot set scenario after initialization");
   }
   if (scenario.target_positions.empty())
   {
@@ -82,20 +82,20 @@ void SimulationManager::LoadScenarioFromJSON(const std::string &json_path)
   scenario_ = j.at("scenario").get<SimulationScenario>();
 }
 
-// void SimulationManager::DumpStatesToJSON(const std::string& json_path) const
-// {
-//   if (states_.empty())
-//   {
-//     throw std::runtime_error("No simulation states to dump");
-//   }
-//   nlohmann::json j = states_;
-//   std::ofstream file(json_path);
-//   if (!file.is_open())
-//   {
-//     throw std::runtime_error("Failed to open file for writing: " + json_path);
-//   }
-//   file << std::setw(2) << j << '\n';
-// }
+void SimulationManager::DumpStatesToJSON(const std::string& json_path) const
+{
+  if (states_.empty())
+  {
+    throw std::runtime_error("No simulation states to dump");
+  }
+  nlohmann::json j = states_;
+  std::ofstream file(json_path);
+  if (!file.is_open())
+  {
+    throw std::runtime_error("Failed to open file for writing: " + json_path);
+  }
+  file << std::setw(2) << j << '\n';
+}
 
 // void SimulationManager::LoadRandomScenario(uint32_t target_num, uint32_t sensor_num)
 // {
@@ -188,13 +188,13 @@ bool SimulationManager::ShouldStop(const SimulationState &state)
     return false;
     break;
   case SimulationStopCondition::kZeroCoverage:
-    return !state.all_target_covered;
+    return state.covered_target_count == 0;
     break;
   case SimulationStopCondition::kCoverageBelowThreshold:
     return state.coverage_percentage < parameters_->stop_threshold;
     break;
   case SimulationStopCondition::kAnyCoverageLost:
-    return state.covered_target_count == 0;
+    return !state.all_target_covered;
     break;
   default:
     return false;

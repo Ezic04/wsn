@@ -31,8 +31,8 @@ public:
 private:
   void PlaceAtPositions(const std::vector<Point> &target_positions, const std::vector<Point> &sensor_positions);
   // void PlaceSensors(uint32_t target_num, uint32_t sensor_num);
-  void SortByPositions();
+  void SortByPositions(std::vector<size_t> &target_idx,std::vector<size_t> &sensord_idx);
   void SortById();
-  void DetermineNeighborhoods();
+  void DetermineNeighborhoods(std::vector<size_t> &targets_idx, std::vector<size_t> &sensors_idx);
   std::vector<bool> CountCover();
 };

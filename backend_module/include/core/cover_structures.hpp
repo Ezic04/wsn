@@ -20,6 +20,7 @@ struct Cover
   
   bool operator<(const Cover& other) const 
   {
+    if (feasible != other.feasible) return feasible > other.feasible;
     if (degree != other.degree) return degree < other.degree;
     if (lifetime != other.lifetime) return lifetime > other.lifetime;
     if (remaining_to_on != other.remaining_to_on) return remaining_to_on < other.remaining_to_on;

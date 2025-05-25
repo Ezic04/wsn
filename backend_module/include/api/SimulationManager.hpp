@@ -24,7 +24,7 @@ public:
   void SetScenario(const SimulationScenario &scenario);
   void LoadParametersFromJSON(const std::string &json_path);
   void LoadScenarioFromJSON(const std::string &json_path);
-  // void DumpStatesToJSON(const std::string& json_path) const;
+  void DumpStatesToJSON(const std::string& json_path) const;
   // void LoadRandomScenario(uint32_t target_num, uint32_t sensor_num);
   void Initialize();
   void Run();

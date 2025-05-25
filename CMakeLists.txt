@@ -4,6 +4,8 @@ project(backend_module VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 set(VENV_PATH "${CMAKE_SOURCE_DIR}/.venv")
 
 set(pybind11_DIR ${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11)

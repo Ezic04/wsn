@@ -11,35 +11,35 @@ This project implements a simulation of a wireless sensor network (WSN) in C++, 
 - Configurable parameters and scenarios via JSON files
 
 ## Project Structure
-.
-├── backend_module/
-│ ├── include/
-│ │ ├── api/
-│ │ ├── core/
-│ │ └── shared/
-│ ├── src/
-│ │ ├── api/
-│ │ ├── core/
-│ │ └── test.cpp
-│ ├── build/
-│ ├── CMakeLists.txt
-├── example_configs/
-│ ├── config1.json
-│ ├── config2.json
-│ ├── ...
-├── lib/
-│ └── backend_module/
-│ ├── init.py
-│ ├── backend_module.pyd
-│ └── backend_module.pyi
-├── user_interface/
-│ ├── Interface.py
-│ ├── cpp_tests.py
-│ └── main.py
-├── CMakeLists.txt
-├── build.py
-├── requirements.txt
-└── README.md
+.  
+├── backend_module/  
+│ ├── include/  
+│ │ ├── api/  
+│ │ ├── core/  
+│ │ └── shared/  
+│ ├── src/  
+│ │ ├── api/  
+│ │ ├── core/  
+│ │ └── test.cpp  
+│ ├── build/  
+│ ├── CMakeLists.txt  
+├── example_configs/  
+│ ├── config1.json  
+│ ├── config2.json  
+│ ├── ...  
+├── lib/  
+│ └── backend_module/  
+│ ├── init.py  
+│ ├── backend_module.pyd  
+│ └── backend_module.pyi  
+├── user_interface/  
+│ ├── Interface.py  
+│ ├── cpp_tests.py  
+│ └── main.py  
+├── CMakeLists.txt  
+├── build.py  
+├── requirements.txt  
+└── README.md  
 
 ## Dependencies
 

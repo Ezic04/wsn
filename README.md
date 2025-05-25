@@ -111,7 +111,7 @@ python user_interface/Interface.py
 }
 ```
 
-- `sensor_radious`: Sensor detection range.
+- `sensor_radious`: Sensor detection range.  
   Should be a number in the range [0,1].
 - `initial_battery_lvl`: Starting battery level for all sensors.
 - `reshuffle_interval`: Reshuffle period (ticks).
@@ -121,7 +121,7 @@ python user_interface/Interface.py
   - `"kZeroCoverage"`
   - `"kCoverageBelowThreshold"`
   - `"kAnyCoverageLost"`
-- `stop_threshold`: Minimum required coverage (if `kCoverageBelowThreshold` is used).
+- `stop_threshold`: Minimum required coverage (if `kCoverageBelowThreshold` is used).  
   Should be a number in the range [0,1].
 - `sensor_positions/target_positions`: Normalized coordinates of sensors/targets.  
   Each value should be a number in the range [0,1].

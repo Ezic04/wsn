@@ -111,7 +111,8 @@ python user_interface/Interface.py
 }
 ```
 
-- `sensor_radious`: Sensor detection range (normalized).
+- `sensor_radious`: Sensor detection range.
+  Should be a number in the range [0,1].
 - `initial_battery_lvl`: Starting battery level for all sensors.
 - `reshuffle_interval`: Reshuffle period (ticks).
 - `max_ticks`: Maximum simulation steps.
@@ -121,6 +122,11 @@ python user_interface/Interface.py
   - `"kCoverageBelowThreshold"`
   - `"kAnyCoverageLost"`
 - `stop_threshold`: Minimum required coverage (if `kCoverageBelowThreshold` is used).
+  Should be a number in the range [0,1].
+- `sensor_positions/target_positions`: Normalized coordinates of sensors/targets.  
+  Each value should be a number in the range [0,1].
+
+Example configurations are available in the `example_configs` folder.
 
 ## Running the Simulation
 

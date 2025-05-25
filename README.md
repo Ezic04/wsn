@@ -45,13 +45,13 @@ This project implements a simulation of a wireless sensor network (WSN) in C++, 
 
 ### C++ Libraries
 
-- `nlohmann::json`
-- `pybind11==2.13.6`
+- `nlohmann::json (3.12.0)`
+- `pybind11 (2.13.6)`
 
 ### Python Libraries
 
-- `pillow==11.1.0`
-- `pybind11-stubgen==2.5.3`
+- `pillow (11.1.0)`
+- `pybind11-stubgen (2.5.3)`
 
 ### Tools
 

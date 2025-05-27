@@ -55,10 +55,11 @@ This project implements a simulation of a wireless sensor network (WSN) in C++, 
 
 ### Tools
 
-- CMake (`>=4.0.0-rc4`)
-- C++ compiler (`g++ 14.2.0`)
-- Python (`>=3.13.2`)
+- CMake (`4.0.0-rc4`)
+- C++ compiler (`g++ 14.2.0` / `msvc 19.43.34810`)
+- Python (`3.13.2`)
 - VSCode (with recommended extensions)
+- Doxygen (`1.14.0`)
 
 ## Recommended VSCode Extensions
 
@@ -79,10 +80,11 @@ Ensure the correct Python interpreter is selected in VSCode:
 - The terminal should show `(.venv)` in the prompt.
 - If issues occur, restart VSCode.
 
-python user_interface/Interface.py
-
 5. Run the simulation UI:
 
+`python user_interface/Interface.py`
+
+This command should be run from the main project folder.
 
 ## JSON Configuration
 
@@ -111,7 +113,7 @@ python user_interface/Interface.py
 }
 ```
 
-- `sensor_radious`: Sensor detection range.  
+- `sensor_radious`: Sensor detection range (normalized).  
   Should be a number in the range [0,1].
 - `initial_battery_lvl`: Starting battery level for all sensors.
 - `reshuffle_interval`: Reshuffle period (ticks).
@@ -124,17 +126,23 @@ python user_interface/Interface.py
 - `stop_threshold`: Minimum required coverage (if `kCoverageBelowThreshold` is used).  
   Should be a number in the range [0,1].
 - `sensor_positions/target_positions`: Normalized coordinates of sensors/targets.  
-  Each value should be a number in the range [0,1].
+  Each value should be a number in the range [0,1]. 
+  For each sensor, there should be no more than 24 targets and other sensors in its range.
 
 Example configurations are available in the `example_configs` folder.
 
 ## Running the Simulation
 
-- Load parameters and scenario from a JSON file via the UI.
+- Load the parameters and scenario from a JSON file, or enter them manually via the UI.
 - Run the simulation in either step-by-step or automatic mode.
 - Visualize:
   - Sensors (with color-coded state and coverage radius)
   - Targets (covered/uncovered status)
   - Current simulation tick and coverage percentage
+- Save the report from the simulation in text format.
 
 ## Notes
+After selecting "Run Simulation," the program may remain in the "Initializing Simulation" state for an extended period.
+This is an expected behavior since this phase of the algorithm is the most computationally intensive.
+
+In rare cases, the program may crash or freeze if the implemented algorithm fails for reasons not described by the authors of the original paper.

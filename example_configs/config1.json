@@ -1,6 +1,6 @@
 {
   "parameters": {
-    "sensor_radious": 0.37,
+    "sensor_radius": 0.37,
     "initial_battery_lvl": 100,
     "reshuffle_interval": 10,
     "max_ticks": 10000,

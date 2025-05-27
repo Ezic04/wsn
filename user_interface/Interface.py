@@ -43,18 +43,18 @@ class Interface(tk.Tk):
     tk.Button(left_group, text="Save Report…", command=self._save_report).pack(side="left", padx=5)
     tk.Button(left_group, text="Reset", command=self._reset).pack(side="left", padx=5)
 
-    # Right group: Auto, Manual, Replay, Delay
+    # Right group: Manual, Auto, Replay, Delay
     right_group = tk.Frame(self.ctrl)
     right_group.pack(side="right")
 
+    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
     self.auto_btn = tk.Button(right_group, text="Auto ▶▶", command=self._toggle_auto)
     self.auto_btn.pack(side="left", padx=5)
-    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
     tk.Button(right_group, text="Replay ⟲", command=self._replay).pack(side="left", padx=5)
     
     tk.Label(right_group, text="Delay(ms):").pack(side="left", padx=(20, 0))
-    self.delay_var = tk.IntVar(value=100)
-    tk.Spinbox(right_group, from_=20, to=2000, increment=20,
+    self.delay_var = tk.IntVar(value=50)
+    tk.Spinbox(right_group, from_=10, to=1000, increment=10,
            textvariable=self.delay_var, width=5).pack(side="left")
 
     # Canvas and status
@@ -181,8 +181,6 @@ class Interface(tk.Tk):
         self.status.config(text="Scenario loaded")
       if load_params and load_scenario:
         self.status.config(text="Parameters and scenario loaded")
-      # if self.parameters and self.scenario:
-      #   self._run_simulation()
     except Exception as e:
       messagebox.showerror("Error", str(e))
 

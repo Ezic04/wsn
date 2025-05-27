@@ -1,36 +1,29 @@
 #include "core/Simulation.hpp"
 
-#include <map>
-// #define DEBUG
-#define RD 0
-
-
-
-void DrawBattery(int max, int lvl)
-{
-  int max_segments = 32;
-  double percentage = (static_cast<double>(lvl) / max) * 100.0;
-  int segments = lvl * max_segments / max;
-  std::string battery_str = "";
-  for (int i = 0; i < max_segments; ++i)
-  {
-    battery_str += (i < segments) ? "#" : " ";
-  }
-  std::cout << "[" << battery_str << "] " << static_cast<int>(percentage) << "%" << std::endl;
-};
+// void DrawBattery(int max, int lvl)
+// {
+//   int max_segments = 32;
+//   double percentage = (static_cast<double>(lvl) / max) * 100.0;
+//   int segments = lvl * max_segments / max;
+//   std::string battery_str = "";
+//   for (int i = 0; i < max_segments; ++i)
+//   {
+//     battery_str += (i < segments) ? "#" : " ";
+//   }
+//   std::cout << "[" << battery_str << "] " << static_cast<int>(percentage) << "%" << std::endl;
+// };
 
 void Simulation::Initialize(const SimulationParameters &parameters, const SimulationScenario &scenario)
 {
-  initial_batterry_lvl_ = parameters.initial_battery_lvl;
+  initial_battery_lvl_ = parameters.initial_battery_lvl;
   reshuffle_interval_ = parameters.reshuffle_interval;
-  Sensor::SetRadius(parameters.sensor_radious);
+  Sensor::SetRadius(parameters.sensor_radius);
   PlaceAtPositions(scenario.target_positions, scenario.sensor_positions);
 
   std::vector<size_t> sensors_idx;
   std::vector<size_t> target_idx;
   SortByPositions(target_idx, sensors_idx);
   DetermineNeighborhoods(target_idx, sensors_idx);
-  SortById();
 
   for (auto &sensor : sensors_)
   {
@@ -48,13 +41,13 @@ SimulationState Simulation::GetSimulationState()
   for (int i = 0; i < sensor_num; ++i)
   {
     sensor_states.emplace_back(sensors_[i].GetState());
-    sensor_battery_lvls.emplace_back(sensors_[i].GetBateryLevel());
+    sensor_battery_lvls.emplace_back(sensors_[i].GetBatteryLevel());
   }
   state.tick = tick_;
   state.is_target_covered = CountCover();
   state.all_target_covered = all_target_covered_;
-  state.covered_target_count = covered_tragets_count_;
-  state.coverage_percentage = covered_tragets_count_ / target_num;
+  state.covered_target_count = covered_targets_count_;
+  state.coverage_percentage = covered_targets_count_ / (float)target_num;
   return state;
 }
 
@@ -70,7 +63,7 @@ void Simulation::PlaceAtPositions(const std::vector<Point> &target_positions, co
   }
   for (int i = 0; i < sensor_num; ++i)
   {
-    sensors_.emplace_back(sensor_positions[i], initial_batterry_lvl_);
+    sensors_.emplace_back(sensor_positions[i], initial_battery_lvl_);
   }
 }
 
@@ -94,12 +87,6 @@ void Simulation::SortByPositions(std::vector<size_t> &targets_idx, std::vector<s
   };
   std::sort(targets_idx.begin(), targets_idx.end(), target_compare);
   std::sort(sensors_idx.begin(), sensors_idx.end(), sensor_compare);
-}
-
-void Simulation::SortById()
-{
-  std::sort(targets_.begin(), targets_.end());
-  std::sort(sensors_.begin(), sensors_.end());
 }
 
 void Simulation::DetermineNeighborhoods(std::vector<size_t> &targets_idx, std::vector<size_t> &sensors_idx)
@@ -189,24 +176,24 @@ void Simulation::Tick()
 std::vector<bool> Simulation::CountCover()
 {
   std::vector<bool> is_target_covered(target_num);
-  covered_tragets_count_ = 0;
+  covered_targets_count_ = 0;
   for (int i = 0; i < target_num; ++i)
   {
     auto &target = targets_[i];
     is_target_covered[i] = target.GetCoverFlag();
     if (is_target_covered[i])
     {
-      ++covered_tragets_count_;
+      ++covered_targets_count_;
     }
-    else if (tick_ == 0) // debug
-    {
-      std::cout << std::format("t{}: ({},{})\n", target.GetId(), target.GetPosition().x, target.GetPosition().y);
-    }
+    // else if (tick_ == 0) // debug
+    // {
+    //   std::cout << std::format("t{}: ({},{})\n", target.GetId(), target.GetPosition().x, target.GetPosition().y);
+    // }
   }
-  all_target_covered_ = covered_tragets_count_ == targets_.size();
-  if (tick_ % reshuffle_interval_ == 0) // debug
-  {
-    DrawBattery(targets_.size(), covered_tragets_count_);
-  }
+  // if (tick_ % reshuffle_interval_ == 0) // debug
+  // {
+  //   DrawBattery(targets_.size(), covered_targets_count_);
+  // }
+  all_target_covered_ = covered_targets_count_ == targets_.size();
   return is_target_covered;
 }

@@ -1,45 +1,26 @@
-# CMake build files  
 backend_module/build/
 backend_module/src/test.exe
 
 backend_module/bin/
 
+/doc
+
 *.exe
 *.txt
 
-# Ignore .pyd files in lib 
-# lib/**/*.pyd  
-# lib/**/*.pyd  
-# lib/**/*.so  
-# lib/**/*.dll  
-# lib/**/*.pyi
-
-# Libs
 lib/
 
-# VScode files
 .vscode/
-
-# Python virtual environment  
 .venv/  
 
-# Python temporary files  
 __pycache__/  
 *.pyc  
 *.pyo  
-
-# Backend output files  
+  
 *.pyd  
 *.so  
 *.dll  
 *.pyi
 
-
-# Frontend output files  
-bin/*.exe  
-bin/*.out  
-bin/*.a  
-
-# Logs and temporary files  
 *.log  
 *.tmp  

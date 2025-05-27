@@ -1,16 +1,16 @@
-#include <chrono>
 #include <iostream>
-#include <random>
-#include "core/Simulation.hpp"
-#include "core/minimal_cover.hpp"
-#include "api/SimulationManager.hpp"
+// #include <chrono>
+// #include <random>
 
+#include "core/Simulation.hpp"
+#include "api/SimulationManager.hpp"
+// #include "core/minimal_cover.hpp"
 
 int main()
 {
   SimulationManager m;
-  m.LoadParametersFromJSON("config3.json");
-  m.LoadScenarioFromJSON("config3.json");
+  m.LoadParametersFromJSON("config2.json");
+  m.LoadScenarioFromJSON("config2.json");
   m.Initialize();
   m.Run();
   auto states = m.GetSimulationStates();

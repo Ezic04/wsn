@@ -1,6 +1,6 @@
 #include "api/SimulationManager.hpp"
 
-#define RD 0
+// #define RD 0
 
 const SimulationParameters &SimulationManager::GetParameters() const
 {
@@ -26,7 +26,7 @@ void SimulationManager::SetParameters(const SimulationParameters &parameters)
   {
     throw std::runtime_error("Cannot set parameters after initialization");
   }
-  if(parameters.sensor_radious <= 0)
+  if(parameters.sensor_radius <= 0)
   {
     throw std::runtime_error("Sensor radius must be positive");
   }
@@ -97,29 +97,29 @@ void SimulationManager::DumpStatesToJSON(const std::string& json_path) const
   file << std::setw(2) << j << '\n';
 }
 
-// void SimulationManager::LoadRandomScenario(uint32_t target_num, uint32_t sensor_num)
-// {
-//   scenario_ = SimulationScenario();
-//   auto &target_positions = scenario_->target_positions;
-//   auto &sensor_positions = scenario_->sensor_positions;
-//   std::random_device rd;
-// #ifdef RD
-//   std::mt19937 gen(RD);
-// #else
-//   std::mt19937 gen(rd());
-// #endif
-//   std::uniform_real_distribution<> dist(0.0, 1.0);
-//   sensor_positions.reserve(sensor_num);
-//   target_positions.reserve(target_num);
-//   for (size_t i = 0; i < sensor_num; ++i)
-//   {
-//     sensor_positions.emplace_back(dist(gen), dist(gen));
-//   }
-//   for (size_t i = 0; i < target_num; ++i)
-//   {
-//     target_positions.emplace_back(dist(gen), dist(gen));
-//   }
-// }
+void SimulationManager::LoadRandomScenario(uint32_t target_num, uint32_t sensor_num)
+{
+  scenario_ = SimulationScenario();
+  auto &target_positions = scenario_->target_positions;
+  auto &sensor_positions = scenario_->sensor_positions;
+  std::random_device rd;
+#ifdef RD
+  std::mt19937 gen(RD);
+#else
+  std::mt19937 gen(rd());
+#endif
+  std::uniform_real_distribution<> dist(0.0, 1.0);
+  sensor_positions.reserve(sensor_num);
+  target_positions.reserve(target_num);
+  for (size_t i = 0; i < sensor_num; ++i)
+  {
+    sensor_positions.emplace_back(dist(gen), dist(gen));
+  }
+  for (size_t i = 0; i < target_num; ++i)
+  {
+    target_positions.emplace_back(dist(gen), dist(gen));
+  }
+}
 
 void SimulationManager::Initialize()
 {
@@ -180,7 +180,7 @@ json SimulationManager::LoadJSON(const std::string &json_path)
   return j;
 }
 
-bool SimulationManager::ShouldStop(const SimulationState &state)
+bool SimulationManager::ShouldStop(const SimulationState &state) const
 {
   switch (parameters_->stop_condition)
   {

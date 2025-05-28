@@ -4,6 +4,47 @@ from PIL import Image, ImageTk, ImageDraw
 from lib.backend_module import backend_module as backend
 
 class Interface(tk.Tk):
+  """
+  Interface class for the Wireless Sensor Network (WSN) simulation GUI.
+  This class provides a graphical user interface (GUI) for managing and visualizing
+  the simulation of a WSN. It allows users to load parameters
+  and scenarios, configure settings, run simulations, and visualize the results.
+  Attributes:
+    canvas_size (int): The size of the canvas used for visualization.
+    canvas (tk.Canvas): The canvas widget for drawing the simulation states.
+    status (tk.Label): A label widget for displaying the current status of the simulation.
+    manager (backend.SimulationManager): The backend simulation manager handling the simulation logic.
+    parameters (Optional[backend.SimulationParameters]): The simulation parameters.
+    scenario (Optional[backend.SimulationScenario]): The simulation scenario.
+    states (List[backend.SimulationState]): The list of simulation states generated during the simulation.
+    final_state (Optional[backend.SimulationState]): The final state of the simulation.
+    current_idx (int): The current index of the simulation state being displayed.
+    _job (Optional[str]): The ID of the scheduled job for automatic simulation playback.
+    running (bool): Indicates whether the simulation is running in automatic playback mode.
+    auto_btn (tk.Button): The button widget for toggling automatic playback.
+    delay_var (tk.IntVar): The variable controlling the delay (in milliseconds) between automatic steps.
+  Methods:
+    _toggle_auto(): Toggles the automatic playback of the simulation.
+    _start_auto(): Starts the automatic playback of the simulation.
+    _stop_auto(): Stops the automatic playback of the simulation.
+    _auto_step(): Advances the simulation by one step during automatic playback.
+    _step_once(): Advances the simulation by one step manually.
+    _replay(): Resets the simulation playback to the first state.
+    _run_simulation(): Runs the simulation using the configured parameters and scenario.
+    _handle_load(choice: str): Handles the loading of parameters, scenarios, or both based on the user's choice.
+    _ask_and_load(load_params: bool, load_scenario: bool): Prompts the user to load parameters and/or scenarios from a file.
+    _load_both(): Loads both parameters and scenarios from a file.
+    _load_parameters_only(): Loads only the simulation parameters from a file.
+    _load_scenario_only(): Loads only the simulation scenario from a file.
+    _handle_set(choice: str): Handles the setting of parameters or scenarios based on the user's choice.
+    _create_popup(title: str): Creates a popup window for user input.
+    _set_parameters(): Opens a popup window for setting simulation parameters.
+    _set_scenario(): Opens a popup window for setting the simulation scenario.
+    _save_report(): Saves the simulation report to a file.
+    _reset(): Resets the simulation to its initial state.
+    _draw_state(state: backend.SimulationState): Draws the current simulation state on the canvas.
+    run(): Starts the main event loop of the GUI.
+  """
   def __init__(self):
     super().__init__()
     self.title("WSN Simulation")
@@ -47,7 +88,7 @@ class Interface(tk.Tk):
     right_group = tk.Frame(self.ctrl)
     right_group.pack(side="right")
 
-    tk.Button(right_group, text="Manual Step ▶", command=self.step_once).pack(side="left", padx=5)
+    tk.Button(right_group, text="Manual Step ▶", command=self._step_once).pack(side="left", padx=5)
     self.auto_btn = tk.Button(right_group, text="Auto ▶▶", command=self._toggle_auto)
     self.auto_btn.pack(side="left", padx=5)
     tk.Button(right_group, text="Replay ⟲", command=self._replay).pack(side="left", padx=5)
@@ -103,7 +144,7 @@ class Interface(tk.Tk):
     else:
       self._stop_auto()
 
-  def step_once(self):
+  def _step_once(self):
     if not self.states: return
     if self.current_idx < len(self.states) - 1:
       self.current_idx += 1
@@ -264,8 +305,6 @@ class Interface(tk.Tk):
 
     tk.Button(win, text="Apply", command=apply).grid(row=len(fields)+1, columnspan=2, pady=5)
 
-
-
   def _set_scenario(self):
     if self.manager.IsInitialized():
       messagebox.showwarning("Warning", "Reset the simulation first")
@@ -299,7 +338,6 @@ class Interface(tk.Tk):
         messagebox.showerror("Error", str(e))
 
     tk.Button(win, text="Apply", command=apply).grid(row=2, columnspan=2, pady=5)
-
  
   def _save_report(self):
     if not self.manager.IsInitialized():
